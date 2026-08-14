@@ -38,6 +38,7 @@ export const narratives = [
     outlets: 14,
     trendData: [30, 45, 62, 78, 85, 91, 88],
     ministries: ['Ministry of Finance', 'Ministry of Commerce'],
+    regions: ['Hindi Belt', 'Maharashtra & Gujarat', 'South India'],
   },
   {
     id: 2,
@@ -49,6 +50,7 @@ export const narratives = [
     outlets: 11,
     trendData: [10, 18, 32, 45, 58, 72, 81],
     ministries: ['Ministry of Labour', 'Ministry of Statistics'],
+    regions: ['Hindi Belt', 'Maharashtra & Gujarat', 'South India'],
   },
   {
     id: 3,
@@ -60,6 +62,7 @@ export const narratives = [
     outlets: 8,
     trendData: [20, 35, 42, 48, 45, 43, 40],
     ministries: ['Ministry of External Affairs', 'Ministry of Commerce'],
+    regions: ['South India', 'Maharashtra & Gujarat'],
   },
   {
     id: 4,
@@ -71,6 +74,7 @@ export const narratives = [
     outlets: 9,
     trendData: [15, 22, 28, 35, 42, 48, 52],
     ministries: ['Ministry of Health & Family Welfare'],
+    regions: ['Hindi Belt', 'Eastern India', 'South India'],
   },
   {
     id: 5,
@@ -82,6 +86,7 @@ export const narratives = [
     outlets: 7,
     trendData: [25, 30, 28, 35, 38, 41, 44],
     ministries: ['Ministry of Electronics & IT'],
+    regions: ['Northeast', 'Hindi Belt'],
   },
   {
     id: 6,
@@ -93,10 +98,11 @@ export const narratives = [
     outlets: 6,
     trendData: [18, 22, 25, 30, 28, 32, 35],
     ministries: ['Ministry of Defence'],
+    regions: ['Punjab & Haryana', 'South India'],
   },
 ];
 
-export const articles = [
+const coreArticles = [
   {
     id: 1,
     headline: 'Cabinet approves Rs 2.5 lakh crore Gati Shakti 2.0 master plan for multi-modal connectivity',
@@ -115,6 +121,24 @@ export const articles = [
     sentimentReason: 'Factual reporting of policy announcement with emphasis on development impact and economic benefits',
     crossReferences: 12,
     mediaType: 'Print' as const,
+    region: 'Hindi Belt',
+    fullBody: 'NEW DELHI: The Union Cabinet on Wednesday approved Gati Shakti 2.0, a Rs 2.5 lakh crore multi-modal connectivity programme that brings 16 ministries onto a single planning grid. Officials said the framework will complete remaining economic corridors by 2029 and cut logistics costs toward the 8% of GDP target.\n\nThe plan expands the original PM Gati Shakti platform with dedicated freight corridors, port-rail last-mile links, and a common GIS layer for land acquisition and environmental clearances. Finance Ministry estimates 3.2 lakh direct construction jobs over five years.\n\nOpposition MPs asked for a published district-wise works calendar. The Cabinet note, shared with PIB, lists 214 priority stretches across 22 states.',
+    estimatedReach: '48.2M impressions (print + digital syndication)',
+    audience: ['National English dailies', 'Hindi belt business pages', 'Infrastructure trade press'],
+    spreadTimeline: [
+      { day: 'Aug 11', outlet: 'PTI', type: 'Wire' },
+      { day: 'Aug 11', outlet: 'Times of India', type: 'Front page' },
+      { day: 'Aug 12', outlet: 'Dainik Jagran', type: 'Vernacular' },
+      { day: 'Aug 13', outlet: 'Business channels', type: 'Analysis' },
+    ],
+    relatedArticleIds: [5, 8],
+    historicalContext: 'Gati Shakti 1.0 (2021) received similar day-one saturation in national dailies; vernacular pickup lagged 48 hours. This cycle is 12 hours faster in Hindi editions.',
+    detailedActions: [
+      'Issue 12-language fact sheet with corridor maps by 18:00 IST',
+      'Brief regional PIB units in UP, Maharashtra, and Tamil Nadu for local job numbers',
+      'Offer on-record quote from DPIIT secretary for evening business TV',
+    ],
+    sourceUrl: 'https://timesofindia.indiatimes.com/india/gati-shakti-2-0-cabinet',
   },
   {
     id: 2,
@@ -133,6 +157,24 @@ export const articles = [
     sentimentReason: 'Substantive policy criticism backed by expert analysis — not incident reporting but directed critique of government methodology',
     crossReferences: 8,
     mediaType: 'Print' as const,
+    region: 'Maharashtra & Gujarat',
+    fullBody: 'MUMBAI: Economists quoted in Mint have questioned the Periodic Labour Force Survey revision that reclassifies a share of gig and unpaid family workers. They argue the change lifts the headline employment rate by about 3.2 percentage points versus the previous series.\n\nThe Ministry of Statistics has not issued a technical note comparing ICLS-19 alignment with the older PLFS definition. Opposition parties used the Mint report in a Wednesday briefing.\n\nThis is policy criticism, not accident or crime reporting — it belongs on the Labour and Statistics desks.',
+    estimatedReach: '12.6M (Mint print + livemint.com + TV pickups)',
+    audience: ['Policy elites', 'Business desk readers', 'Opposition researchers'],
+    spreadTimeline: [
+      { day: 'Aug 8', outlet: 'The Wire', type: 'First report' },
+      { day: 'Aug 9', outlet: 'Mint', type: 'National print' },
+      { day: 'Aug 11', outlet: 'NDTV', type: 'TV panel' },
+      { day: 'Aug 13', outlet: 'Hindi dailies', type: 'Regional' },
+    ],
+    relatedArticleIds: [6],
+    historicalContext: 'Feb 2024 jobs-data cycle ran three weeks after the first methodology critique went unbriefed. Same outlet sequence: digital specialist → Mint → TV.',
+    detailedActions: [
+      'Publish PLFS vs ICLS-19 comparison PDF within 12 hours',
+      'Joint MoSPI–MoLE backgrounder for economic editors',
+      'Do not wait for evening bulletins — this is already on TV panels',
+    ],
+    sourceUrl: 'https://www.livemint.com/economy/plfs-methodology',
   },
   {
     id: 3,
@@ -150,7 +192,21 @@ export const articles = [
     sentimentReason: 'Routine incident reporting — not a policy critique. Flagged LOW relevance. Previous system incorrectly tagged this as Negative for Ministry of Transport.',
     crossReferences: 1,
     mediaType: 'Print' as const,
-    aiFlag: 'FILTERED: Would have appeared as negative news under keyword-based system. AI correctly identifies this as routine incident reporting with no ministry relevance.',
+    region: 'Hindi Belt',
+    aiFlag: 'FILTERED: Would have appeared as negative news under keyword-based system. Correctly identified as routine incident reporting with no ministry relevance.',
+    fullBody: 'AGRA: A private bus from Lucknow to Delhi overturned near the Yamuna Expressway toll plaza. Twelve passengers were treated for minor injuries at the district hospital. Police said the driver lost control; no government vehicle or NHAI contract is involved.\n\nKeyword systems tagged this Negative for Transport because of “accident” and “Uttar Pradesh”. Officers do not need this in the morning ministry clip file.',
+    estimatedReach: '0.4M (district edition)',
+    audience: ['Local crime/city desk'],
+    spreadTimeline: [
+      { day: 'Aug 13', outlet: 'Dainik Jagran Agra', type: 'City page' },
+    ],
+    relatedArticleIds: [],
+    historicalContext: 'Samvad regularly dumped district accident copy into Transport and Home ministry queues. This item is shown to demonstrate the filter, not as an intelligence lead.',
+    detailedActions: [
+      'Keep suppressed from ministry dashboards (relevance 8%)',
+      'Do not include in morning brief',
+    ],
+    sourceUrl: 'https://www.jagran.com/uttar-pradesh/agra-bus-accident',
   },
   {
     id: 4,
@@ -169,6 +225,22 @@ export const articles = [
     sentimentReason: 'Ground-level grievance reporting with specific details of implementation failure — actionable criticism requiring response',
     crossReferences: 5,
     mediaType: 'Print' as const,
+    region: 'Hindi Belt',
+    fullBody: 'LUCKNOW: District correspondents in 14 blocks of UP and Bihar report that the 17th PM-KISAN instalment is 3–4 weeks late. Farmers named Aadhaar-seeding mismatches at the CSC as the main cause.\n\nUnlike a highway accident, this is implementation failure with named geography. It is already moving from district editions toward state front pages.',
+    estimatedReach: '9.1M (Hindi belt print cluster)',
+    audience: ['Rural readers', 'District editions', 'Agriculture desks'],
+    spreadTimeline: [
+      { day: 'Aug 11', outlet: 'Amar Ujala district', type: 'First report' },
+      { day: 'Aug 12', outlet: 'Amar Ujala Lucknow', type: 'State page' },
+      { day: 'Aug 13', outlet: 'Dainik Bhaskar', type: 'Pickup' },
+    ],
+    relatedArticleIds: [1],
+    historicalContext: 'Oct 2025 disbursement-delay cluster reached national pages in five days when regional PIB did not issue a status note.',
+    detailedActions: [
+      'PIB Lucknow and Patna: instalment status table by district',
+      'Coordinate Agriculture Ministry CSC helpdesk numbers for regional releases',
+    ],
+    sourceUrl: 'https://www.amarujala.com/lucknow/pm-kisan-delay',
   },
   {
     id: 5,
@@ -187,6 +259,22 @@ export const articles = [
     sentimentReason: 'Analytical reporting highlighting diplomatic achievement and economic projections — positive framing across domestic and international outlets',
     crossReferences: 7,
     mediaType: 'Print' as const,
+    region: 'South India',
+    fullBody: 'CHENNAI: The Hindu reports the India–ASEAN corridor is projected to add $40 billion in annual trade, with shorter customs dwell times at Chennai, Vizag, and Mundra.\n\nNational English coverage is strong; Tamil and Telugu pickup remains thin — a penetration gap, not a sentiment problem.',
+    estimatedReach: '18.4M (English national + south metros)',
+    audience: ['English national', 'Exporter associations', 'South metro readers'],
+    spreadTimeline: [
+      { day: 'Aug 11', outlet: 'MEA briefing', type: 'Official' },
+      { day: 'Aug 12', outlet: 'The Hindu', type: 'National' },
+      { day: 'Aug 13', outlet: 'International wires', type: 'Global' },
+    ],
+    relatedArticleIds: [1],
+    historicalContext: 'Trade-deal stories typically stall at English broadsheets unless PIB supplies SME export and port-job angles in vernacular.',
+    detailedActions: [
+      'Vernacular op-eds on SME export benefit, not only GDP totals',
+      'Chennai / Kochi / Vizag port briefings',
+    ],
+    sourceUrl: 'https://www.thehindu.com/business/asean-corridor',
   },
   {
     id: 6,
@@ -204,6 +292,22 @@ export const articles = [
     sentimentReason: 'Opposition-sourced counter-narrative with political framing — high amplification potential on digital platforms',
     crossReferences: 6,
     mediaType: 'Digital' as const,
+    region: 'Hindi Belt',
+    fullBody: 'NEW DELHI: NDTV carried the Congress alternative jobs note claiming creation is 40% below target, citing CMIE against PLFS. Clips are circulating on YouTube and X with 340% mention growth in 48 hours.\n\nThis is political amplification of the Mint methodology story, not a new data release.',
+    estimatedReach: '22.0M (TV + YouTube + X)',
+    audience: ['TV news', 'Digital-first', 'Opposition networks'],
+    spreadTimeline: [
+      { day: 'Aug 12', outlet: 'Congress briefing', type: 'Political' },
+      { day: 'Aug 13', outlet: 'NDTV', type: 'Digital + TV' },
+      { day: 'Aug 13', outlet: 'YouTube / X', type: 'Amplification' },
+    ],
+    relatedArticleIds: [2],
+    historicalContext: 'Same amplification signature as Feb 2024 jobs cycle. TV panels follow digital within 24 hours.',
+    detailedActions: [
+      'Factual explainer before 18:00 news belt',
+      'Do not engage the party film — correct the data series only',
+    ],
+    sourceUrl: 'https://www.ndtv.com/india-news/congress-jobs-report',
   },
   {
     id: 7,
@@ -219,7 +323,19 @@ export const articles = [
     sentimentReason: 'Commercial advertisement — zero ministry relevance',
     crossReferences: 0,
     mediaType: 'Print' as const,
-    aiFlag: 'FILTERED: Keyword "Delhi" would have listed this under Delhi-related ministries in the old system. AI correctly identifies this as a commercial advertisement with no government relevance.',
+    region: 'Hindi Belt',
+    aiFlag: 'FILTERED: Keyword “Delhi” would have listed this under Delhi-related ministries. Identified as a commercial advertisement with no government relevance.',
+    fullBody: 'A full-page luxury housing advertisement in the Delhi edition of Hindustan Times. No editorial copy. The word “Delhi” is the only match a keyword engine would use.',
+    estimatedReach: '—',
+    audience: ['Advertisers'],
+    spreadTimeline: [],
+    relatedArticleIds: [],
+    historicalContext: 'Keyword queues routinely mixed classifieds and ads into ministry clip lists.',
+    detailedActions: [
+      'Exclude from all ministry feeds',
+      'Do not count toward coverage volume for officers',
+    ],
+    sourceUrl: 'https://www.hindustantimes.com/classifieds',
   },
   {
     id: 8,
@@ -237,8 +353,110 @@ export const articles = [
     sentimentReason: 'Balanced reporting — acknowledges enrollment success while highlighting rural implementation gaps. Contains both positive data and constructive criticism.',
     crossReferences: 9,
     mediaType: 'Print' as const,
+    region: 'Eastern India',
+    fullBody: 'The Indian Express reports 4.2 crore new Ayushman Bharat 2.0 enrolments in Phase 1, with tribal and remote blocks still below target. Tone is mixed: volume is a success; empanelment gaps are the risk.\n\nHealth officers need both numbers in the same card — not a keyword “negative” dump.',
+    estimatedReach: '15.7M',
+    audience: ['National English', 'Health policy', 'State health desks'],
+    spreadTimeline: [
+      { day: 'Aug 10', outlet: 'MoHFW release', type: 'Official' },
+      { day: 'Aug 11', outlet: 'Indian Express', type: 'National' },
+      { day: 'Aug 12', outlet: 'Regional health pages', type: 'Follow' },
+    ],
+    relatedArticleIds: [4],
+    historicalContext: 'Implementation-gap cycles harden if unanswered for a week even when overall numbers are strong.',
+    detailedActions: [
+      'State-wise empanelment table for six lagging states',
+      'Beneficiary case notes via regional PIB, not only Delhi release',
+    ],
+    sourceUrl: 'https://indianexpress.com/article/ayushman-bharat-2',
   },
 ];
+
+function clip(p: {
+  id: number;
+  headline: string;
+  summary: string;
+  source: string;
+  ministry: string;
+  ministry2?: string;
+  region: string;
+  mediaType: 'Print' | 'Television' | 'Digital' | 'Social Media';
+  sentiment: 'Positive' | 'Negative' | 'Neutral' | 'Mixed';
+  edition?: string;
+  date?: string;
+  relevanceScore?: number;
+}) {
+  return {
+    id: p.id,
+    headline: p.headline,
+    summary: p.summary,
+    source: p.source,
+    edition: p.edition ?? (p.mediaType === 'Print' ? 'National' : p.mediaType),
+    date: p.date ?? 'Aug 12, 2026',
+    page: p.mediaType === 'Print' ? 'Page 4' : 'N/A',
+    relevanceScore: p.relevanceScore ?? 86,
+    ministryTags: [
+      { name: p.ministry, confidence: 93 },
+      ...(p.ministry2 ? [{ name: p.ministry2, confidence: 76 }] : []),
+    ],
+    sentiment: p.sentiment,
+    sentimentReason: 'Contextual classification of government-relevant coverage — not keyword matching.',
+    crossReferences: 4,
+    mediaType: p.mediaType,
+    region: p.region,
+    fullBody: p.summary,
+    estimatedReach: '4.1M',
+    audience: [p.region, p.mediaType],
+    spreadTimeline: [{ day: p.date ?? 'Aug 12', outlet: p.source, type: 'Pickup' }],
+    relatedArticleIds: [] as number[],
+    historicalContext: 'Seeded so officers can filter every ministry, region, and medium in this mockup.',
+    detailedActions: ['Include in morning brief if relevance remains high'],
+    sourceUrl: `https://pib.gov.in/sentinel/clip/${p.id}`,
+    aiFlag: undefined as string | undefined,
+  };
+}
+
+const seedArticles = [
+  clip({ id: 9, headline: 'GST collections hit a record Rs 2.1 lakh crore in July', summary: 'Finance Ministry data shows July GST at an all-time high, with strong e-way bill growth in Maharashtra and Gujarat.', source: 'CNBC-TV18', ministry: 'Ministry of Finance', region: 'Maharashtra & Gujarat', mediaType: 'Television', sentiment: 'Positive' }),
+  clip({ id: 10, headline: 'Budget mid-year review: capex on track, states lag in matching grants', summary: 'Doordarshan panel on the mid-year review notes Union capex is on schedule while several states have not drawn matching grants.', source: 'DD News', ministry: 'Ministry of Finance', region: 'Hindi Belt', mediaType: 'Television', sentiment: 'Mixed' }),
+  clip({ id: 11, headline: 'Tejas Mk2 first flight window confirmed for 2027', summary: 'MoD briefing on HAL production and flight-test calendar for Tejas Mk2, covered as a capability story not a scandal.', source: 'The Tribune', ministry: 'Ministry of Defence', region: 'Punjab & Haryana', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 12, headline: 'INS Vikrant deployment: Navy outreach on western seaboard', summary: 'Republic TV covers the carrier group off Gujarat with MoD clips on indigenous systems.', source: 'Republic', ministry: 'Ministry of Defence', region: 'Maharashtra & Gujarat', mediaType: 'Television', sentiment: 'Positive' }),
+  clip({ id: 13, headline: 'Agniveer intake: Punjab cantonment towns report mixed family sentiment', summary: 'Local digital outlets in Ambala and Jalandhar carry family interviews; not a national crisis but a regional beat officers should see.', source: 'Punjab Kesari Digital', ministry: 'Ministry of Defence', region: 'Punjab & Haryana', mediaType: 'Digital', sentiment: 'Mixed' }),
+  clip({ id: 14, headline: 'India–Japan 2+2: Tokyo commends Indo-Pacific logistics pact', summary: 'MEA readout picked up by south metro English and Japanese wires; vernacular still thin.', source: 'Deccan Herald', ministry: 'Ministry of External Affairs', ministry2: 'Ministry of Defence', region: 'South India', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 15, headline: 'Passport Seva backlog in Guwahati draws Assam TV debate', summary: 'Regional TV flags appointment delays; consular services story for MEA, not a foreign-policy attack.', source: 'News Live Assam', ministry: 'Ministry of External Affairs', region: 'Northeast', mediaType: 'Television', sentiment: 'Negative' }),
+  clip({ id: 16, headline: 'X thread on ASEAN corridor jobs for Chennai SMEs gains 1.2M views', summary: 'Trade-benefit thread originating from exporter associations; useful pickup gap filler for MEA/Commerce.', source: 'X (Twitter)', ministry: 'Ministry of External Affairs', ministry2: 'Ministry of Commerce', region: 'South India', mediaType: 'Social Media', sentiment: 'Positive' }),
+  clip({ id: 17, headline: 'AIIMS Bhubaneswar expansion: Odisha press on new cancer block', summary: 'State health pages treat this as delivery news with a wait-list caveat.', source: 'Sambad', ministry: 'Ministry of Health & Family Welfare', region: 'Eastern India', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 18, headline: 'YouTube explainers on Ayushman hospital empanelment in tribal belts', summary: 'Creator explainers in Santhali and Odia; Health desk should treat as mixed implementation coverage.', source: 'YouTube', ministry: 'Ministry of Health & Family Welfare', region: 'Eastern India', mediaType: 'Social Media', sentiment: 'Mixed' }),
+  clip({ id: 19, headline: 'Kerala private hospitals seek Ayushman package revision', summary: 'Malayalam digital portals carry IMA Kerala statement; constructive industry pressure, not a scam story.', source: 'Onmanorama', ministry: 'Ministry of Health & Family Welfare', region: 'South India', mediaType: 'Digital', sentiment: 'Mixed' }),
+  clip({ id: 20, headline: 'MSP procurement of paddy opens in Punjab with record mandi arrivals', summary: 'Agriculture story with local numbers; positive operations coverage for the ministry brief.', source: 'Ajit', ministry: 'Ministry of Agriculture', region: 'Punjab & Haryana', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 21, headline: 'PM-KISAN: Aadhaar seeding camps announced after Hindi belt complaints', summary: 'Follow-up to delay stories; Agriculture + Finance. TV pickup in Lucknow belt.', source: 'Aaj Tak', ministry: 'Ministry of Agriculture', ministry2: 'Ministry of Finance', region: 'Hindi Belt', mediaType: 'Television', sentiment: 'Mixed' }),
+  clip({ id: 22, headline: 'Instagram reels on drip irrigation subsidy in Nashik vineyards', summary: 'Farmer-created content with high engagement; Agriculture should see this as positive vernacular pickup.', source: 'Instagram', ministry: 'Ministry of Agriculture', region: 'Maharashtra & Gujarat', mediaType: 'Social Media', sentiment: 'Positive' }),
+  clip({ id: 23, headline: 'BharatNet Phase-III: 1,200 more gram panchayats lit in Assam', summary: 'MeitY numbers carried by Assam Tribune; fills the Digital India coverage gap in the Northeast.', source: 'Assam Tribune', ministry: 'Ministry of Electronics & IT', region: 'Northeast', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 24, headline: 'Digital India 3.0: connectivity still patchy in hill districts of Meghalaya', summary: 'Shillong digital outlet documents tower gaps; mixed, not a national attack.', source: 'The Shillong Times', ministry: 'Ministry of Electronics & IT', region: 'Northeast', mediaType: 'Digital', sentiment: 'Mixed' }),
+  clip({ id: 25, headline: 'MeitY ONDC onboarding drive for Kirana stores — Facebook live from Pune', summary: 'Commerce-adjacent but tagged Electronics & IT for the platform story.', source: 'Facebook', ministry: 'Ministry of Electronics & IT', ministry2: 'Ministry of Commerce', region: 'Maharashtra & Gujarat', mediaType: 'Social Media', sentiment: 'Positive' }),
+  clip({ id: 26, headline: 'EPFO additions: 18.6 lakh net subscribers in Q1', summary: 'Labour ministry statistical release; positive payroll proxy if explained against PLFS critique.', source: 'Business Standard', ministry: 'Ministry of Labour', ministry2: 'Ministry of Statistics', region: 'Hindi Belt', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 27, headline: 'MoSPI technical note on PLFS ICLS-19 alignment — still awaited, say editors', summary: 'Statistics-specific follow. Officers need this on the Statistics filter, not only Labour.', source: 'ThePrint', ministry: 'Ministry of Statistics', region: 'Hindi Belt', mediaType: 'Digital', sentiment: 'Negative' }),
+  clip({ id: 28, headline: 'NSO data users’ conference: state governments ask for district-level dashboards', summary: 'Constructive coverage of statistical capacity; Statistics ministry brief.', source: 'The Telegraph', ministry: 'Ministry of Statistics', region: 'Eastern India', mediaType: 'Print', sentiment: 'Neutral' }),
+  clip({ id: 29, headline: 'PLFS explainer clip by data journalists clocks 800K views on YouTube', summary: 'Methodology literacy content; Statistics + Labour. Tone mixed.', source: 'YouTube', ministry: 'Ministry of Statistics', ministry2: 'Ministry of Labour', region: 'South India', mediaType: 'Social Media', sentiment: 'Mixed' }),
+  clip({ id: 30, headline: 'Export facilitation: RoDTEP rates unchanged, Gujarati press flags MSME wait', summary: 'Commerce story from Ahmedabad editions; mixed on process, not a boycott.', source: 'Gujarat Samachar', ministry: 'Ministry of Commerce', region: 'Maharashtra & Gujarat', mediaType: 'Print', sentiment: 'Mixed' }),
+  clip({ id: 31, headline: 'GIFT City fund registrations — CNBC special from Gandhinagar', summary: 'Positive financial-centre coverage for Commerce/Finance desks.', source: 'CNBC-TV18', ministry: 'Ministry of Commerce', ministry2: 'Ministry of Finance', region: 'Maharashtra & Gujarat', mediaType: 'Television', sentiment: 'Positive' }),
+  clip({ id: 32, headline: 'FASTag annual pass: NHAI clarifies toll rules after viral WhatsApp forward', summary: 'Road Transport operational story. Distinct from accident copy.', source: 'Times Now', ministry: 'Ministry of Road Transport', region: 'Hindi Belt', mediaType: 'Television', sentiment: 'Neutral', relevanceScore: 81 }),
+  clip({ id: 33, headline: 'Mumbai–Nagpur expressway: local digital on land-acquisition closures', summary: 'Infrastructure implementation, not a crash. Road Transport filter.', source: 'Mid-Day Online', ministry: 'Ministry of Road Transport', region: 'Maharashtra & Gujarat', mediaType: 'Digital', sentiment: 'Mixed', relevanceScore: 84 }),
+  clip({ id: 34, headline: 'Vande Bharat: new Ranchi–Howrah service covered in Bengali press', summary: 'Railways delivery story for Eastern India.', source: 'Anandabazar Patrika', ministry: 'Ministry of Railways', region: 'Eastern India', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 35, headline: 'Railway Board denies privatisation of 150 routes — fact-check pickup on TV', summary: 'Rebuttal to the misinfo item; Railways officers need this in the feed.', source: 'India Today TV', ministry: 'Ministry of Railways', region: 'Hindi Belt', mediaType: 'Television', sentiment: 'Neutral', relevanceScore: 90 }),
+  clip({ id: 36, headline: 'Station redevelopment in Amritsar: heritage groups post site photos on Instagram', summary: 'Local pride mixed with stalling complaints; Railways Punjab desk.', source: 'Instagram', ministry: 'Ministry of Railways', region: 'Punjab & Haryana', mediaType: 'Social Media', sentiment: 'Mixed' }),
+  clip({ id: 37, headline: 'MHA: new coastal security drill with Gujarat police', summary: 'Home ministry operational coverage, western seaboard.', source: 'Sandesh', ministry: 'Ministry of Home Affairs', region: 'Maharashtra & Gujarat', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 38, headline: 'Manipur reconciliation meetings: Imphal TV covers MHA interlocutor visit', summary: 'Sensitive Home ministry story; regional, not to be dropped from NE filter.', source: 'Impact TV Manipur', ministry: 'Ministry of Home Affairs', region: 'Northeast', mediaType: 'Television', sentiment: 'Mixed' }),
+  clip({ id: 39, headline: 'Civil defence volunteer drive: Facebook posts from Lucknow zone', summary: 'Low-heat Home ministry outreach; Hindi belt social.', source: 'Facebook', ministry: 'Ministry of Home Affairs', region: 'Hindi Belt', mediaType: 'Social Media', sentiment: 'Neutral', relevanceScore: 72 }),
+  clip({ id: 40, headline: 'MGNREGA: Rajasthan digital portals on delayed wage lists in 9 blocks', summary: 'Rural Development implementation. Distinct from the viral fund-diversion claim.', source: 'Patrika.com', ministry: 'Ministry of Rural Development', region: 'Hindi Belt', mediaType: 'Digital', sentiment: 'Negative', relevanceScore: 88 }),
+  clip({ id: 41, headline: 'PMAY-G completions in Odisha tribal blocks — state TV package', summary: 'Rural housing delivery; Eastern India.', source: 'O TV', ministry: 'Ministry of Rural Development', region: 'Eastern India', mediaType: 'Television', sentiment: 'Positive' }),
+  clip({ id: 42, headline: 'SHG bank linkage: Malayalam press on NRLM credit in Wayanad', summary: 'Rural Development positive vernacular in the south.', source: 'Mathrubhumi', ministry: 'Ministry of Rural Development', region: 'South India', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 43, headline: 'Reddit AMA on PLFS vs CMIE — high comment volume, critical tone', summary: 'Social listening sample for Labour/Statistics. Not a news report; still a spread signal.', source: 'Reddit', ministry: 'Ministry of Labour', region: 'South India', mediaType: 'Social Media', sentiment: 'Negative', relevanceScore: 74 }),
+  clip({ id: 44, headline: 'Kohima: Digital India village demo covered by Nagaland Post', summary: 'Second Northeast print item for MeitY so the region filter is not a single card.', source: 'Nagaland Post', ministry: 'Ministry of Electronics & IT', region: 'Northeast', mediaType: 'Print', sentiment: 'Positive' }),
+  clip({ id: 45, headline: 'Haryana Kisan Club Facebook group on MSP wheat bonus rumour', summary: 'Agriculture social; needs verification before brief. Punjab & Haryana quota.', source: 'Facebook', ministry: 'Ministry of Agriculture', region: 'Punjab & Haryana', mediaType: 'Social Media', sentiment: 'Mixed', relevanceScore: 70 }),
+];
+
+export const articles = [...coreArticles, ...seedArticles];
 
 export const alerts = [
   {
@@ -252,6 +470,8 @@ export const alerts = [
     recommendation: 'Priority: Prepare data-backed factual explainer within 12 hours. Brief designated spokespeople. Coordinate with Ministry of Labour for official response.',
     source: 'Digital platforms, YouTube, X',
     timestamp: 'Aug 13, 2026 — 11:30 IST',
+    ministries: ['Ministry of Labour', 'Ministry of Statistics'],
+    region: 'Hindi Belt',
   },
   {
     id: 2,
@@ -264,6 +484,8 @@ export const alerts = [
     recommendation: 'Issue clarification through PIB regional offices. Coordinate with Agriculture Ministry for disbursement status update. Deploy field verification in affected districts.',
     source: 'Amar Ujala, Dainik Jagran, Dainik Bhaskar (district editions)',
     timestamp: 'Aug 13, 2026 — 09:15 IST',
+    ministries: ['Ministry of Agriculture', 'Ministry of Finance'],
+    region: 'Hindi Belt',
   },
   {
     id: 3,
@@ -276,6 +498,8 @@ export const alerts = [
     recommendation: 'URGENT: Route to PIB Fact Check Unit immediately. Prepare visual debunking material with actual budget allocation data. Coordinate social media counter-narrative.',
     source: 'X (Twitter), Facebook, WhatsApp forwards',
     timestamp: 'Aug 13, 2026 — 14:00 IST',
+    ministries: ['Ministry of Labour', 'Ministry of Rural Development'],
+    region: 'Hindi Belt',
   },
   {
     id: 4,
@@ -288,6 +512,8 @@ export const alerts = [
     recommendation: 'Prepare state-wise implementation success data. Push beneficiary impact stories through PIB regional units. Coordinate with Health Ministry for gap-closure timeline.',
     source: 'Regional print editions (Hindi, Tamil, Telugu)',
     timestamp: 'Aug 12, 2026 — 16:45 IST',
+    ministries: ['Ministry of Health & Family Welfare'],
+    region: 'South India',
   },
   {
     id: 5,
@@ -298,8 +524,10 @@ export const alerts = [
     historicalMatch: 'NE coverage gaps have previously been exploited by opposition narratives within 2-3 weeks.',
     timeToCritical: '2-3 weeks',
     recommendation: 'Proactive push: Organize NE media briefing with MeitY. Deploy beneficiary stories from connected villages. Consider PIB NE social media campaign.',
-    source: 'Coverage gap analysis (PIB Sentinel AI)',
+    source: 'Coverage gap analysis',
     timestamp: 'Aug 11, 2026 — 10:00 IST',
+    ministries: ['Ministry of Electronics & IT'],
+    region: 'Northeast',
   },
 ];
 
@@ -381,6 +609,8 @@ export const messagePenetration = [
     gap: 'Regional vernacular coverage at 61% — below 75% target',
     action: 'Translate and distribute regional press releases in 12 languages',
     priority: 'HIGH' as const,
+    ministry: 'Ministry of Finance',
+    region: 'Hindi Belt',
   },
   {
     message: 'Ayushman Bharat expansion — Healthcare for all',
@@ -390,6 +620,8 @@ export const messagePenetration = [
     gap: 'Digital narrative being overtaken by implementation criticism',
     action: 'Push beneficiary success stories on social media; digital-first content strategy',
     priority: 'MEDIUM' as const,
+    ministry: 'Ministry of Health & Family Welfare',
+    region: 'Eastern India',
   },
   {
     message: 'India\'s global leadership — ASEAN trade corridor',
@@ -399,6 +631,8 @@ export const messagePenetration = [
     gap: 'Severe vernacular gap — regional press at 34%. Story perceived as "elite English media" narrative',
     action: 'Local impact angles: jobs created, SME export benefits. Vernacular op-eds by trade experts',
     priority: 'HIGH' as const,
+    ministry: 'Ministry of External Affairs',
+    region: 'South India',
   },
   {
     message: 'Digital India 3.0 — Rural broadband connectivity',
@@ -408,6 +642,8 @@ export const messagePenetration = [
     gap: 'National print below target; NE regional coverage critically low at 22%',
     action: 'NE media briefing; village-level success story campaign; infographic distribution',
     priority: 'MEDIUM' as const,
+    ministry: 'Ministry of Electronics & IT',
+    region: 'Northeast',
   },
   {
     message: 'Employment generation — MUDRA and Startup India results',
@@ -417,6 +653,8 @@ export const messagePenetration = [
     gap: 'Severely under-reported across all channels. Counter-narrative dominating the employment space.',
     action: 'URGENT: Proactive data campaign with district-level job creation numbers. Beneficiary testimonials.',
     priority: 'CRITICAL' as const,
+    ministry: 'Ministry of Labour',
+    region: 'Hindi Belt',
   },
 ];
 
@@ -430,6 +668,8 @@ export const misinfoItems = [
     verificationStatus: 'FALSE — Manipulated document' as const,
     action: 'Issue visual fact-check with actual budget allocation breakdown. Flag for platform takedown.',
     detectedAt: 'Aug 13, 2026 — 08:20 IST',
+    ministries: ['Ministry of Labour'],
+    region: 'Hindi Belt',
   },
   {
     id: 2,
@@ -440,6 +680,8 @@ export const misinfoItems = [
     verificationStatus: 'MISLEADING — Quote taken out of context' as const,
     action: 'Release full transcript and video clip with correct context. Distribute to fact-check networks.',
     detectedAt: 'Aug 12, 2026 — 14:30 IST',
+    ministries: ['Ministry of External Affairs'],
+    region: 'South India',
   },
   {
     id: 3,
@@ -450,6 +692,8 @@ export const misinfoItems = [
     verificationStatus: 'FALSE — Reverse image search confirms 2023 origin' as const,
     action: 'Issue PIB Fact Check tweet with image comparison. Coordinate with Kerala PIB office.',
     detectedAt: 'Aug 11, 2026 — 11:45 IST',
+    ministries: ['Ministry of Home Affairs'],
+    region: 'South India',
   },
   {
     id: 4,
@@ -460,6 +704,8 @@ export const misinfoItems = [
     verificationStatus: 'FALSE — No such decision taken' as const,
     action: 'Issue official Railway Ministry clarification. Monitor for re-emergence.',
     detectedAt: 'Aug 10, 2026 — 09:00 IST',
+    ministries: ['Ministry of Railways'],
+    region: 'Hindi Belt',
   },
 ];
 
@@ -554,6 +800,7 @@ export const ministryBriefing = {
 
 export const percolationData = [
   {
+    id: 2,
     narrative: 'Unemployment methodology concerns',
     timeline: [
       { day: 'Aug 8', outlet: 'The Wire (Digital)', type: 'First Report' },
@@ -563,10 +810,14 @@ export const percolationData = [
       { day: 'Aug 12', outlet: 'Congress Press Conference', type: 'Political Pickup' },
       { day: 'Aug 13', outlet: 'Dainik Jagran, Amar Ujala', type: 'Regional Spread' },
     ],
-    status: 'ESCALATING',
+    status: 'ESCALATING' as const,
     velocity: 'High',
+    ministries: ['Ministry of Labour', 'Ministry of Statistics'],
+    regions: ['Hindi Belt', 'Maharashtra & Gujarat', 'South India'],
+    media: ['Print', 'Digital', 'Television', 'Social Media'],
   },
   {
+    id: 1,
     narrative: 'Gati Shakti 2.0 announcement',
     timeline: [
       { day: 'Aug 11', outlet: 'PTI Wire', type: 'First Report' },
@@ -575,19 +826,306 @@ export const percolationData = [
       { day: 'Aug 12', outlet: 'Business Channels', type: 'Analysis' },
       { day: 'Aug 13', outlet: 'International Media', type: 'Global Coverage' },
     ],
-    status: 'SATURATED',
+    status: 'SATURATED' as const,
     velocity: 'Peaked',
+    ministries: ['Ministry of Finance', 'Ministry of Commerce'],
+    regions: ['Hindi Belt', 'Maharashtra & Gujarat', 'South India'],
+    media: ['Print', 'Television', 'Digital'],
+  },
+  {
+    id: 3,
+    narrative: 'India–ASEAN trade corridor',
+    timeline: [
+      { day: 'Aug 11', outlet: 'MEA briefing', type: 'Official' },
+      { day: 'Aug 12', outlet: 'The Hindu', type: 'National' },
+      { day: 'Aug 13', outlet: 'X / exporter threads', type: 'Social' },
+      { day: 'Aug 13', outlet: 'International wires', type: 'Global' },
+    ],
+    status: 'STABLE' as const,
+    velocity: 'Steady',
+    ministries: ['Ministry of External Affairs', 'Ministry of Commerce'],
+    regions: ['South India', 'Maharashtra & Gujarat'],
+    media: ['Print', 'Digital', 'Social Media'],
+  },
+  {
+    id: 4,
+    narrative: 'Ayushman Bharat 2.0 implementation',
+    timeline: [
+      { day: 'Aug 10', outlet: 'MoHFW release', type: 'Official' },
+      { day: 'Aug 11', outlet: 'Indian Express', type: 'National' },
+      { day: 'Aug 12', outlet: 'Odisha / Kerala press', type: 'Regional' },
+      { day: 'Aug 13', outlet: 'YouTube explainers', type: 'Social' },
+    ],
+    status: 'STABLE' as const,
+    velocity: 'Steady',
+    ministries: ['Ministry of Health & Family Welfare'],
+    regions: ['Eastern India', 'South India', 'Hindi Belt'],
+    media: ['Print', 'Digital', 'Social Media'],
+  },
+  {
+    id: 5,
+    narrative: 'Digital India 3.0 in the Northeast',
+    timeline: [
+      { day: 'Aug 9', outlet: 'MeitY', type: 'Release' },
+      { day: 'Aug 11', outlet: 'Assam Tribune', type: 'Regional' },
+      { day: 'Aug 12', outlet: 'Shillong Times', type: 'Gap report' },
+      { day: 'Aug 13', outlet: 'Nagaland Post', type: 'Village demo' },
+    ],
+    status: 'STABLE' as const,
+    velocity: 'Low',
+    ministries: ['Ministry of Electronics & IT'],
+    regions: ['Northeast'],
+    media: ['Print', 'Digital'],
+  },
+  {
+    id: 6,
+    narrative: 'Defence procurement and Tejas Mk2',
+    timeline: [
+      { day: 'Aug 10', outlet: 'MoD PRO', type: 'Brief' },
+      { day: 'Aug 11', outlet: 'The Tribune', type: 'Print' },
+      { day: 'Aug 12', outlet: 'Republic TV', type: 'Broadcast' },
+      { day: 'Aug 13', outlet: 'Punjab digital', type: 'Agniveer' },
+    ],
+    status: 'STABLE' as const,
+    velocity: 'Steady',
+    ministries: ['Ministry of Defence'],
+    regions: ['Punjab & Haryana', 'Maharashtra & Gujarat', 'South India'],
+    media: ['Print', 'Television', 'Digital'],
   },
 ];
 
+export const narrativeDetails: Record<number, {
+  status: 'ESCALATING' | 'SATURATED' | 'STABLE';
+  outletBreakdown: { outlet: string; tone: string; reach: string }[];
+  timeline: { day: string; outlet: string; type: string }[];
+  ministryImpact: { name: string; confidence: number }[];
+  velocitySeries: { day: string; mentions: number }[];
+  historicalPattern: string;
+  response: { priority: string; timeline: string; spokesperson: string; notes: string };
+  sourceArticleIds: number[];
+}> = {
+  1: {
+    status: 'SATURATED',
+    outletBreakdown: [
+      { outlet: 'Times of India', tone: 'Positive', reach: '8.4M' },
+      { outlet: 'Dainik Jagran', tone: 'Positive', reach: '6.1M' },
+      { outlet: 'The Hindu', tone: 'Neutral', reach: '3.2M' },
+      { outlet: 'Mint', tone: 'Positive', reach: '2.8M' },
+      { outlet: 'DD News', tone: 'Positive', reach: '4.0M' },
+    ],
+    timeline: [
+      { day: 'Aug 11 09:00', outlet: 'PTI', type: 'Wire' },
+      { day: 'Aug 11 11:00', outlet: 'National dailies', type: 'Front page' },
+      { day: 'Aug 12', outlet: 'Hindi press', type: 'Translation' },
+      { day: 'Aug 12', outlet: 'Business TV', type: 'Analysis' },
+      { day: 'Aug 13', outlet: 'International', type: 'Global' },
+    ],
+    ministryImpact: [
+      { name: 'Ministry of Finance', confidence: 96 },
+      { name: 'Ministry of Commerce', confidence: 88 },
+      { name: 'Ministry of Railways', confidence: 72 },
+      { name: 'Ministry of Road Transport', confidence: 70 },
+    ],
+    velocitySeries: [
+      { day: 'Aug 7', mentions: 30 },
+      { day: 'Aug 8', mentions: 45 },
+      { day: 'Aug 9', mentions: 62 },
+      { day: 'Aug 10', mentions: 78 },
+      { day: 'Aug 11', mentions: 85 },
+      { day: 'Aug 12', mentions: 91 },
+      { day: 'Aug 13', mentions: 88 },
+    ],
+    historicalPattern: 'Matches Gati Shakti 1.0 (Oct 2021): national saturation in 36 hours, then plateau. Risk is vernacular fade, not backlash.',
+    response: {
+      priority: 'Sustain',
+      timeline: 'This week',
+      spokesperson: 'DPIIT / Finance additional secretary',
+      notes: 'Shift from announcement to district job and corridor maps. Do not over-brief English desks.',
+    },
+    sourceArticleIds: [1, 5],
+  },
+  2: {
+    status: 'ESCALATING',
+    outletBreakdown: [
+      { outlet: 'Mint', tone: 'Critical', reach: '4.1M' },
+      { outlet: 'The Wire', tone: 'Critical', reach: '1.9M' },
+      { outlet: 'NDTV', tone: 'Critical', reach: '6.8M' },
+      { outlet: 'Indian Express', tone: 'Mixed', reach: '3.5M' },
+      { outlet: 'Dainik Jagran', tone: 'Critical', reach: '5.2M' },
+    ],
+    timeline: [
+      { day: 'Aug 8', outlet: 'The Wire', type: 'First report' },
+      { day: 'Aug 9', outlet: 'Mint', type: 'National print' },
+      { day: 'Aug 10', outlet: 'Indian Express', type: 'Editorial' },
+      { day: 'Aug 11', outlet: 'NDTV', type: 'Panel' },
+      { day: 'Aug 12', outlet: 'Congress briefing', type: 'Political' },
+      { day: 'Aug 13', outlet: 'Hindi dailies', type: 'Regional' },
+    ],
+    ministryImpact: [
+      { name: 'Ministry of Labour', confidence: 95 },
+      { name: 'Ministry of Statistics', confidence: 91 },
+    ],
+    velocitySeries: [
+      { day: 'Aug 7', mentions: 10 },
+      { day: 'Aug 8', mentions: 18 },
+      { day: 'Aug 9', mentions: 32 },
+      { day: 'Aug 10', mentions: 45 },
+      { day: 'Aug 11', mentions: 58 },
+      { day: 'Aug 12', mentions: 72 },
+      { day: 'Aug 13', mentions: 81 },
+    ],
+    historicalPattern: 'Same sequence as Feb 2024 jobs cycle: specialist digital → Mint → TV → political conference → Hindi belt. Unbriefed, that cycle lasted 3 weeks.',
+    response: {
+      priority: 'Immediate',
+      timeline: '12 hours',
+      spokesperson: 'MoSPI + Labour joint briefing',
+      notes: 'Technical comparison of PLFS series. Do not debate the party film.',
+    },
+    sourceArticleIds: [2, 6],
+  },
+  3: {
+    status: 'STABLE',
+    outletBreakdown: [
+      { outlet: 'The Hindu', tone: 'Positive', reach: '3.2M' },
+      { outlet: 'Times of India', tone: 'Positive', reach: '2.1M' },
+      { outlet: 'Eenadu', tone: 'Neutral', reach: '0.8M' },
+    ],
+    timeline: [
+      { day: 'Aug 11', outlet: 'MEA', type: 'Briefing' },
+      { day: 'Aug 12', outlet: 'The Hindu', type: 'National' },
+      { day: 'Aug 13', outlet: 'Wires', type: 'Global' },
+    ],
+    ministryImpact: [
+      { name: 'Ministry of External Affairs', confidence: 93 },
+      { name: 'Ministry of Commerce', confidence: 90 },
+    ],
+    velocitySeries: [
+      { day: 'Aug 7', mentions: 20 },
+      { day: 'Aug 8', mentions: 35 },
+      { day: 'Aug 9', mentions: 42 },
+      { day: 'Aug 10', mentions: 48 },
+      { day: 'Aug 11', mentions: 45 },
+      { day: 'Aug 12', mentions: 43 },
+      { day: 'Aug 13', mentions: 40 },
+    ],
+    historicalPattern: 'Trade agreements stall in English press unless local export jobs are supplied.',
+    response: {
+      priority: 'Vernacular push',
+      timeline: '3 days',
+      spokesperson: 'Commerce / MEA',
+      notes: 'Port and SME angles for Tamil, Telugu, Malayalam desks.',
+    },
+    sourceArticleIds: [5],
+  },
+  4: {
+    status: 'STABLE',
+    outletBreakdown: [
+      { outlet: 'Indian Express', tone: 'Mixed', reach: '3.8M' },
+      { outlet: 'Regional health pages', tone: 'Mixed', reach: '2.4M' },
+    ],
+    timeline: [
+      { day: 'Aug 10', outlet: 'MoHFW', type: 'Release' },
+      { day: 'Aug 11', outlet: 'Indian Express', type: 'National' },
+      { day: 'Aug 12', outlet: 'State pages', type: 'Follow' },
+    ],
+    ministryImpact: [{ name: 'Ministry of Health & Family Welfare', confidence: 98 }],
+    velocitySeries: [
+      { day: 'Aug 7', mentions: 15 },
+      { day: 'Aug 8', mentions: 22 },
+      { day: 'Aug 9', mentions: 28 },
+      { day: 'Aug 10', mentions: 35 },
+      { day: 'Aug 11', mentions: 42 },
+      { day: 'Aug 12', mentions: 48 },
+      { day: 'Aug 13', mentions: 52 },
+    ],
+    historicalPattern: 'Mixed implementation stories harden without state-wise tables.',
+    response: {
+      priority: 'Monitor',
+      timeline: '5 days',
+      spokesperson: 'Health additional secretary',
+      notes: 'Empanelment data for six lagging states.',
+    },
+    sourceArticleIds: [8],
+  },
+  5: {
+    status: 'STABLE',
+    outletBreakdown: [
+      { outlet: 'National digital', tone: 'Mixed', reach: '2.0M' },
+      { outlet: 'NE press', tone: 'Neutral', reach: '0.3M' },
+    ],
+    timeline: [
+      { day: 'Aug 9', outlet: 'MeitY', type: 'Release' },
+      { day: 'Aug 11', outlet: 'National digital', type: 'Pickup' },
+    ],
+    ministryImpact: [{ name: 'Ministry of Electronics & IT', confidence: 90 }],
+    velocitySeries: [
+      { day: 'Aug 7', mentions: 25 },
+      { day: 'Aug 8', mentions: 30 },
+      { day: 'Aug 9', mentions: 28 },
+      { day: 'Aug 10', mentions: 35 },
+      { day: 'Aug 11', mentions: 38 },
+      { day: 'Aug 12', mentions: 41 },
+      { day: 'Aug 13', mentions: 44 },
+    ],
+    historicalPattern: 'NE coverage vacuums fill with critical copy within 2–3 weeks.',
+    response: {
+      priority: 'Fill gap',
+      timeline: '2 weeks',
+      spokesperson: 'MeitY regional',
+      notes: 'Guwahati briefing; village connectivity case notes.',
+    },
+    sourceArticleIds: [],
+  },
+  6: {
+    status: 'STABLE',
+    outletBreakdown: [
+      { outlet: 'Defence beat', tone: 'Positive', reach: '1.6M' },
+      { outlet: 'Punjab press', tone: 'Positive', reach: '0.9M' },
+    ],
+    timeline: [
+      { day: 'Aug 10', outlet: 'MoD', type: 'Brief' },
+      { day: 'Aug 12', outlet: 'Defence pages', type: 'Follow' },
+    ],
+    ministryImpact: [{ name: 'Ministry of Defence', confidence: 94 }],
+    velocitySeries: [
+      { day: 'Aug 7', mentions: 18 },
+      { day: 'Aug 8', mentions: 22 },
+      { day: 'Aug 9', mentions: 25 },
+      { day: 'Aug 10', mentions: 30 },
+      { day: 'Aug 11', mentions: 28 },
+      { day: 'Aug 12', mentions: 32 },
+      { day: 'Aug 13', mentions: 35 },
+    ],
+    historicalPattern: 'Procurement coverage stays specialist unless linked to Aero India calendar.',
+    response: {
+      priority: 'Maintain',
+      timeline: 'Routine',
+      spokesperson: 'MoD PRO',
+      notes: 'Hold line; plan Aero India 2027 media calendar.',
+    },
+    sourceArticleIds: [],
+  },
+};
+
 export const sidebarItems = [
   { id: 'command-center', label: 'Command Center', icon: 'LayoutDashboard' },
-  { id: 'media-feed', label: 'AI Media Feed', icon: 'Newspaper' },
-  { id: 'narratives', label: 'Narrative Intelligence', icon: 'GitBranch' },
-  { id: 'regional', label: 'Regional Intelligence', icon: 'Map' },
-  { id: 'early-warning', label: 'Early Warning', icon: 'AlertTriangle' },
+  { id: 'media-feed', label: 'Media Coverage', icon: 'Newspaper' },
+  { id: 'narratives', label: 'Narratives', icon: 'GitBranch' },
+  { id: 'regional', label: 'Regional Coverage', icon: 'Map' },
+  { id: 'early-warning', label: 'Alerts', icon: 'AlertTriangle' },
   { id: 'cross-platform', label: 'Cross-Platform', icon: 'Monitor' },
   { id: 'penetration', label: 'Message Penetration', icon: 'Radio' },
   { id: 'misinfo', label: 'Misinformation Watch', icon: 'ShieldAlert' },
   { id: 'briefing', label: 'Ministry Briefing', icon: 'FileText' },
 ];
+
+export type Article = (typeof articles)[number] & { aiFlag?: string };
+export type Narrative = (typeof narratives)[number];
+
+export function mediaFilterKey(media: string): 'print' | 'television' | 'digital' | 'social' | null {
+  if (media === 'Print') return 'print';
+  if (media === 'Television') return 'television';
+  if (media === 'Digital') return 'digital';
+  if (media === 'Social Media') return 'social';
+  return null;
+}
