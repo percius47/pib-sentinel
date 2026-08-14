@@ -2,7 +2,8 @@
 
 import { Clock, Newspaper } from 'lucide-react';
 import Modal from './Modal';
-import { articles, type Article } from '@/data/mockData';
+import { articles, computeGenuine, articleCluster, type Article } from '@/data/mockData';
+import GenuineRing from './GenuineRing';
 
 function Clipping({ article }: { article: Article }) {
   return (
@@ -30,6 +31,8 @@ export default function ArticleModal({
   onClose: () => void;
   onOpenArticle: (id: number) => void;
 }) {
+  const genuine = computeGenuine(article);
+  const cluster = articleCluster(article.id);
   const related = (article.relatedArticleIds || [])
     .map((id) => articles.find((a) => a.id === id))
     .filter(Boolean) as Article[];
@@ -37,16 +40,22 @@ export default function ArticleModal({
   return (
     <Modal onClose={onClose} labelledBy="article-modal-title">
       <div className="p-5 md:p-7 clear-both">
-        <div className="flex flex-wrap gap-2 mb-3">
-          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-border-strong text-text-secondary">
-            {article.sentiment}
-          </span>
-          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-border-strong text-text-secondary">
-            Relevance {article.relevanceScore}%
-          </span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
-            {article.mediaType}
-          </span>
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="flex flex-wrap gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-border-strong text-text-secondary">
+              {article.sentiment}
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-border-strong text-text-secondary">
+              Relevance {article.relevanceScore}%
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
+              {article.mediaType}
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
+              {genuine.marker}
+            </span>
+          </div>
+          <GenuineRing data={genuine} size="lg" label />
         </div>
 
         <h2 id="article-modal-title" className="text-lg md:text-xl font-semibold text-text-primary leading-snug mb-4 pr-8">
@@ -72,9 +81,13 @@ export default function ArticleModal({
         <div className="mt-6 p-4 rounded-lg bg-bg-surface border border-border-subtle">
           <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">Analysis</p>
           <p className="text-sm text-text-secondary">{article.sentimentReason}</p>
+          <p className="text-xs text-text-muted mt-2">{genuine.note}</p>
           {'aiFlag' in article && article.aiFlag ? (
             <p className="text-xs text-accent-amber mt-2">Filter note: {article.aiFlag}</p>
           ) : null}
+          {cluster && (
+            <p className="text-xs text-text-muted mt-2">Cluster: {cluster.headline}</p>
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 gap-4 mt-4">

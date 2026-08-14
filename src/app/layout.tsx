@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Providers from '@/components/Providers';
 import AppShell from '@/components/AppShell';
@@ -19,17 +20,18 @@ export const metadata: Metadata = {
   description: 'Media intelligence for Press Information Bureau, Government of India',
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  const stored = (await cookies()).get('pib-theme')?.value;
+  const theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
+
   return (
-    <html lang="en" data-theme="dark" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('pib-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);else document.documentElement.setAttribute('data-theme','dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`,
-          }}
-        />
-      </head>
-      <body className="bg-bg-primary text-text-primary antialiased">
+    <html
+      lang="en"
+      data-theme={theme}
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="bg-bg-primary text-text-primary antialiased" suppressHydrationWarning>
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>

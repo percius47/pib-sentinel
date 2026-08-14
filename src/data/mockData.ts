@@ -1,3 +1,17 @@
+import {
+  buildCoverageArticles,
+  extraNarratives,
+  extraPercolation,
+  extraNarrativeDetails,
+  extraAlerts,
+  extraPenetration,
+  extraMisinfo,
+  extraClusters,
+  ministryBriefings as buildMinistryBriefings,
+  GRID_REGIONS,
+  GRID_MEDIA,
+} from './seedGrid';
+
 export const kpiData = {
   coverageVolume: 5_234,
   coverageDelta: '+12%',
@@ -100,6 +114,7 @@ export const narratives = [
     ministries: ['Ministry of Defence'],
     regions: ['Punjab & Haryana', 'South India'],
   },
+  ...extraNarratives,
 ];
 
 const coreArticles = [
@@ -456,7 +471,7 @@ const seedArticles = [
   clip({ id: 45, headline: 'Haryana Kisan Club Facebook group on MSP wheat bonus rumour', summary: 'Agriculture social; needs verification before brief. Punjab & Haryana quota.', source: 'Facebook', ministry: 'Ministry of Agriculture', region: 'Punjab & Haryana', mediaType: 'Social Media', sentiment: 'Mixed', relevanceScore: 70 }),
 ];
 
-export const articles = [...coreArticles, ...seedArticles];
+export const articles = [...coreArticles, ...seedArticles, ...buildCoverageArticles([...coreArticles, ...seedArticles])];
 
 export const alerts = [
   {
@@ -529,6 +544,7 @@ export const alerts = [
     ministries: ['Ministry of Electronics & IT'],
     region: 'Northeast',
   },
+  ...extraAlerts,
 ];
 
 export const regionData = [
@@ -656,6 +672,7 @@ export const messagePenetration = [
     ministry: 'Ministry of Labour',
     region: 'Hindi Belt',
   },
+  ...extraPenetration,
 ];
 
 export const misinfoItems = [
@@ -707,6 +724,7 @@ export const misinfoItems = [
     ministries: ['Ministry of Railways'],
     region: 'Hindi Belt',
   },
+  ...extraMisinfo,
 ];
 
 export const crossPlatformData = {
@@ -796,6 +814,11 @@ export const ministryBriefing = {
     'Employment counter-narrative has 78% escalation probability — monitor closely',
     'MGNREGA fund diversion misinformation (2.3M impressions) — fact-check in progress',
   ],
+};
+
+export const ministryBriefings: Record<string, typeof ministryBriefing> = {
+  ...buildMinistryBriefings(),
+  'Ministry of Finance': ministryBriefing,
 };
 
 export const percolationData = [
@@ -892,7 +915,12 @@ export const percolationData = [
     regions: ['Punjab & Haryana', 'Maharashtra & Gujarat', 'South India'],
     media: ['Print', 'Television', 'Digital'],
   },
-];
+  ...extraPercolation,
+].map((p) => ({
+  ...p,
+  regions: [...new Set([...p.regions, ...GRID_REGIONS])],
+  media: [...new Set([...p.media, ...GRID_MEDIA])],
+}));
 
 export const narrativeDetails: Record<number, {
   status: 'ESCALATING' | 'SATURATED' | 'STABLE';
@@ -1105,6 +1133,7 @@ export const narrativeDetails: Record<number, {
     },
     sourceArticleIds: [],
   },
+  ...extraNarrativeDetails(),
 };
 
 export const sidebarItems = [
@@ -1119,7 +1148,11 @@ export const sidebarItems = [
   { id: 'briefing', label: 'Ministry Briefing', icon: 'FileText' },
 ];
 
-export type Article = (typeof articles)[number] & { aiFlag?: string };
+export type Article = (typeof articles)[number] & {
+  aiFlag?: string;
+  clusterId?: number;
+  outletStance?: OutletStance;
+};
 export type Narrative = (typeof narratives)[number];
 
 export function mediaFilterKey(media: string): 'print' | 'television' | 'digital' | 'social' | null {
@@ -1128,4 +1161,537 @@ export function mediaFilterKey(media: string): 'print' | 'television' | 'digital
   if (media === 'Digital') return 'digital';
   if (media === 'Social Media') return 'social';
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Iteration 3: Genuine Score, Story Clusters, Executive Digest, Priority Pin,
+// Ask Sentinel responses
+// ---------------------------------------------------------------------------
+
+export type LanguageMarker = 'Factual' | 'Analytical' | 'Emotive' | 'Propagandistic';
+export type OutletStance = 'Factual' | 'Amplifying' | 'Sceptical' | 'Critical' | 'Wire copy';
+
+export interface GenuineFactors {
+  sourceCred: number;
+  corroboration: number;
+  languageBias: number;
+  factCheckHistory: number;
+  deepfakeLikelihood: number | null;
+}
+
+export interface GenuineData {
+  score: number;
+  factors: GenuineFactors;
+  marker: LanguageMarker;
+  note: string;
+}
+
+// Per-outlet base credibility used as the source-cred factor for Genuine.
+export const outletCredibility: Record<string, number> = {
+  'Times of India': 88,
+  'The Hindu': 92,
+  'Indian Express': 90,
+  'Hindustan Times': 84,
+  'Mint': 89,
+  'Business Standard': 90,
+  'CNBC-TV18': 84,
+  'DD News': 82,
+  'Dainik Jagran': 80,
+  'Amar Ujala': 80,
+  'Dainik Bhaskar': 79,
+  'The Tribune': 83,
+  'Deccan Herald': 85,
+  'The Telegraph': 83,
+  'The Telegraph Online': 80,
+  'Sun News': 70,
+  'Zee Punjab Haryana': 68,
+  'Anandabazar Patrika': 82,
+  'Sambad': 78,
+  'Mathrubhumi': 84,
+  'Onmanorama': 78,
+  'The Sentinel': 76,
+  'Assam Tribune': 78,
+  'Nagaland Post': 75,
+  'The Shillong Times': 74,
+  'News Live Assam': 72,
+  'Impact TV Manipur': 68,
+  'O TV': 72,
+  'Punjab Kesari Digital': 66,
+  'Republic': 60,
+  'NDTV': 68,
+  'India Today TV': 72,
+  'Aaj Tak': 68,
+  'Times Now': 65,
+  'ThePrint': 75,
+  'The Wire': 62,
+  'Firstpost': 68,
+  'Ajit': 78,
+  'Sandesh': 74,
+  'Gujarat Samachar': 75,
+  'Patrika.com': 68,
+  'Mid-Day Online': 66,
+  'YouTube': 45,
+  'X (Twitter)': 40,
+  'Facebook': 38,
+  'Instagram': 42,
+  'Reddit': 45,
+  'Hindustan Times (Delhi ad)': 15,
+};
+
+function baseCred(source: string): number {
+  return outletCredibility[source] ?? 60;
+}
+
+// Hand-authored Genuine data keyed by article id — deterministic, demo-friendly.
+export const articleGenuine: Record<number, GenuineData> = {
+  1: {
+    score: 92,
+    factors: { sourceCred: 88, corroboration: 96, languageBias: 90, factCheckHistory: 92, deepfakeLikelihood: null },
+    marker: 'Factual',
+    note: 'Front-page policy reporting cross-referenced by 12 outlets. Language is descriptive, not persuasive.',
+  },
+  2: {
+    score: 78,
+    factors: { sourceCred: 89, corroboration: 72, languageBias: 68, factCheckHistory: 88, deepfakeLikelihood: null },
+    marker: 'Analytical',
+    note: 'Substantive expert critique. Named sources, reproducible arithmetic. Language leans directive but stays within analytical bounds.',
+  },
+  3: {
+    score: 22,
+    factors: { sourceCred: 80, corroboration: 8, languageBias: 62, factCheckHistory: 80, deepfakeLikelihood: null },
+    marker: 'Factual',
+    note: 'Local incident report. Zero corroboration outside one city page. Not a ministry-relevant signal.',
+  },
+  4: {
+    score: 74,
+    factors: { sourceCred: 80, corroboration: 62, languageBias: 78, factCheckHistory: 78, deepfakeLikelihood: null },
+    marker: 'Factual',
+    note: 'District-level implementation reporting with named blocks and cited causes. Ground-truth reliable; regional scope.',
+  },
+  5: {
+    score: 88,
+    factors: { sourceCred: 92, corroboration: 82, languageBias: 88, factCheckHistory: 92, deepfakeLikelihood: null },
+    marker: 'Analytical',
+    note: 'Diplomatic analysis with named projections. High-credibility outlet, corroborated by wires.',
+  },
+  6: {
+    score: 58,
+    factors: { sourceCred: 68, corroboration: 74, languageBias: 42, factCheckHistory: 70, deepfakeLikelihood: 20 },
+    marker: 'Emotive',
+    note: 'Political counter-narrative on a live TV outlet. Emotive framing; comparable data exists but is contested.',
+  },
+  7: {
+    score: 15,
+    factors: { sourceCred: 15, corroboration: 0, languageBias: 30, factCheckHistory: 60, deepfakeLikelihood: null },
+    marker: 'Propagandistic',
+    note: 'Commercial advertisement. No editorial content. Suppress from ministry queues.',
+  },
+  8: {
+    score: 86,
+    factors: { sourceCred: 90, corroboration: 84, languageBias: 84, factCheckHistory: 90, deepfakeLikelihood: null },
+    marker: 'Factual',
+    note: 'Balanced enrolment reporting with named lagging states. High corroboration in follow-up cycles.',
+  },
+};
+
+// Cluster ids that group same real-world event across outlets.
+export const articleClusterMap: Record<number, number> = {
+  // Gati Shakti 2.0 cluster
+  1: 1,
+  9: 1,
+  10: 1,
+  31: 1,
+  // PLFS / employment cluster
+  2: 2,
+  6: 2,
+  26: 2,
+  27: 2,
+  29: 2,
+  43: 2,
+  // PM-KISAN disbursement cluster
+  4: 3,
+  21: 3,
+  // Ayushman Bharat cluster
+  8: 4,
+  17: 4,
+  18: 4,
+  19: 4,
+  // India-ASEAN cluster
+  5: 5,
+  14: 5,
+  16: 5,
+  // Digital India NE cluster
+  23: 6,
+  24: 6,
+  44: 6,
+  // Defence procurement cluster
+  11: 7,
+  12: 7,
+  13: 7,
+};
+
+// Per-article outlet stance for the stance-compare view.
+export const articleStanceMap: Record<number, OutletStance> = {
+  1: 'Factual',
+  5: 'Factual',
+  9: 'Amplifying',
+  10: 'Sceptical',
+  31: 'Amplifying',
+  2: 'Sceptical',
+  6: 'Critical',
+  26: 'Amplifying',
+  27: 'Critical',
+  29: 'Sceptical',
+  43: 'Critical',
+  4: 'Critical',
+  21: 'Amplifying',
+  8: 'Factual',
+  17: 'Amplifying',
+  18: 'Sceptical',
+  19: 'Sceptical',
+  14: 'Factual',
+  16: 'Amplifying',
+  23: 'Amplifying',
+  24: 'Sceptical',
+  44: 'Amplifying',
+  11: 'Factual',
+  12: 'Amplifying',
+  13: 'Sceptical',
+};
+
+export interface StoryCluster {
+  id: number;
+  event: string;
+  headline: string;
+  articleIds: number[];
+  outlets: number;
+  toneSplit: { positive: number; neutral: number; mixed: number; negative: number };
+  genuineScore: number;
+  outletsSummary: string[];
+  ministries: string[];
+  regions: string[];
+  media: string[];
+  note: string;
+}
+
+export const storyClusters: StoryCluster[] = [
+  {
+    id: 1,
+    event: 'Gati Shakti 2.0 Cabinet approval',
+    headline: 'Cabinet approves Rs 2.5 lakh crore Gati Shakti 2.0 — 14 outlets, mostly positive',
+    articleIds: [1, 9, 10, 31],
+    outlets: 14,
+    toneSplit: { positive: 11, neutral: 2, mixed: 1, negative: 0 },
+    genuineScore: 90,
+    outletsSummary: ['Times of India', 'The Hindu', 'Mint', 'Dainik Jagran', 'CNBC-TV18', 'DD News', 'Business Standard'],
+    ministries: ['Ministry of Finance', 'Ministry of Commerce', 'Ministry of Railways'],
+    regions: ['Hindi Belt', 'Maharashtra & Gujarat', 'South India'],
+    media: ['Print', 'Television'],
+    note: 'National saturation with mostly factual/amplifying stances. DD News matching-grant angle is the one sceptical read.',
+  },
+  {
+    id: 2,
+    event: 'PLFS methodology / unemployment critique',
+    headline: 'Unemployment methodology critique — 11 outlets, sceptical to critical',
+    articleIds: [2, 6, 26, 27, 29, 43],
+    outlets: 11,
+    toneSplit: { positive: 1, neutral: 1, mixed: 3, negative: 6 },
+    genuineScore: 66,
+    outletsSummary: ['Mint', 'NDTV', 'The Wire', 'Business Standard', 'ThePrint', 'Reddit'],
+    ministries: ['Ministry of Labour', 'Ministry of Statistics'],
+    regions: ['Hindi Belt', 'Maharashtra & Gujarat', 'South India'],
+    media: ['Print', 'Digital', 'Television', 'Social Media'],
+    note: 'Analytical to critical spread. Business Standard EPFO piece is the one clean counter to the cycle.',
+  },
+  {
+    id: 3,
+    event: 'PM-KISAN disbursement delay',
+    headline: 'PM-KISAN 17th instalment delays — 6 outlets, regional escalation',
+    articleIds: [4, 21],
+    outlets: 6,
+    toneSplit: { positive: 0, neutral: 1, mixed: 2, negative: 3 },
+    genuineScore: 72,
+    outletsSummary: ['Amar Ujala', 'Dainik Bhaskar', 'Aaj Tak', 'Amar Ujala district'],
+    ministries: ['Ministry of Agriculture', 'Ministry of Finance'],
+    regions: ['Hindi Belt'],
+    media: ['Print', 'Television'],
+    note: 'Ground-level, geographically named. Regional pattern; not yet national front pages.',
+  },
+  {
+    id: 4,
+    event: 'Ayushman Bharat 2.0 implementation',
+    headline: 'Ayushman Bharat 2.0 rollout — 9 outlets, mixed regional tone',
+    articleIds: [8, 17, 18, 19],
+    outlets: 9,
+    toneSplit: { positive: 4, neutral: 2, mixed: 3, negative: 0 },
+    genuineScore: 82,
+    outletsSummary: ['Indian Express', 'Sambad', 'Onmanorama', 'YouTube', 'Regional health pages'],
+    ministries: ['Ministry of Health & Family Welfare'],
+    regions: ['Eastern India', 'South India', 'Hindi Belt'],
+    media: ['Print', 'Digital', 'Social Media'],
+    note: 'Delivery numbers strong; empanelment and package-rate coverage keeps tone mixed. Needs state-wise brief.',
+  },
+  {
+    id: 5,
+    event: 'India-ASEAN Free Trade Corridor',
+    headline: 'India-ASEAN trade corridor — 7 outlets, English-heavy',
+    articleIds: [5, 14, 16],
+    outlets: 7,
+    toneSplit: { positive: 5, neutral: 2, mixed: 0, negative: 0 },
+    genuineScore: 85,
+    outletsSummary: ['The Hindu', 'Deccan Herald', 'X exporter threads', 'Business Standard'],
+    ministries: ['Ministry of External Affairs', 'Ministry of Commerce'],
+    regions: ['South India', 'Maharashtra & Gujarat'],
+    media: ['Print', 'Digital', 'Social Media'],
+    note: 'Positive framing but vernacular pickup thin. Push SME/port-jobs angles for Tamil, Telugu, Bengali.',
+  },
+  {
+    id: 6,
+    event: 'Digital India 3.0 in the Northeast',
+    headline: 'Digital India in NE — 7 outlets, coverage gap still open',
+    articleIds: [23, 24, 44],
+    outlets: 7,
+    toneSplit: { positive: 4, neutral: 1, mixed: 2, negative: 0 },
+    genuineScore: 76,
+    outletsSummary: ['Assam Tribune', 'The Shillong Times', 'Nagaland Post'],
+    ministries: ['Ministry of Electronics & IT'],
+    regions: ['Northeast'],
+    media: ['Print', 'Digital'],
+    note: 'Positive village-demo copy exists, but hill-district gaps keep the tone mixed. Fill the vacuum before critical voices do.',
+  },
+  {
+    id: 7,
+    event: 'Defence procurement / Tejas Mk2',
+    headline: 'Tejas Mk2 and carrier deployment — 6 outlets, specialist beat',
+    articleIds: [11, 12, 13],
+    outlets: 6,
+    toneSplit: { positive: 4, neutral: 1, mixed: 1, negative: 0 },
+    genuineScore: 81,
+    outletsSummary: ['The Tribune', 'Republic', 'Punjab Kesari Digital'],
+    ministries: ['Ministry of Defence'],
+    regions: ['Punjab & Haryana', 'Maharashtra & Gujarat'],
+    media: ['Print', 'Television', 'Digital'],
+    note: 'Capability coverage, not scandal. Agniveer family sentiment is the only mixed read.',
+  },
+  ...extraClusters,
+].map((c) => {
+  const regions = [...new Set([...c.regions, ...GRID_REGIONS])];
+  const media = [...new Set([...c.media, ...GRID_MEDIA])];
+  const articleIds = c.articleIds.length
+    ? c.articleIds
+    : articles
+      .filter((a) => a.ministryTags.some((t) => c.ministries.includes(t.name)))
+      .slice(0, 6)
+      .map((a) => a.id);
+  return { ...c, regions, media, articleIds };
+});
+
+// Cluster-agnostic helpers.
+export function articleCluster(articleId: number): StoryCluster | undefined {
+  const cid = articleClusterMap[articleId];
+  return cid ? storyClusters.find((c) => c.id === cid) : undefined;
+}
+
+export function articleStance(articleId: number): OutletStance | undefined {
+  return articleStanceMap[articleId];
+}
+
+// Genuine score derivation for articles without hand-authored data.
+export function computeGenuine(a: {
+  id: number;
+  source: string;
+  crossReferences: number;
+  mediaType: string;
+  sentiment: string;
+  relevanceScore: number;
+}): GenuineData {
+  const hand = articleGenuine[a.id];
+  if (hand) return hand;
+
+  const sourceCred = baseCred(a.source);
+  const corroboration = Math.min(100, 20 + a.crossReferences * 12);
+  const languageBias = a.sentiment === 'Neutral' ? 82
+    : a.sentiment === 'Mixed' ? 75
+    : a.sentiment === 'Positive' ? 72
+    : 60;
+  const factCheckHistory = sourceCred >= 80 ? 88 : sourceCred >= 65 ? 74 : 62;
+  const deepfakeLikelihood = a.mediaType === 'Social Media' ? 22 : null;
+
+  const composite = Math.round(
+    sourceCred * 0.35 +
+    corroboration * 0.25 +
+    languageBias * 0.20 +
+    factCheckHistory * 0.15 +
+    (100 - (deepfakeLikelihood ?? 0)) * 0.05,
+  );
+
+  const marker: LanguageMarker = a.sentiment === 'Neutral' ? 'Factual'
+    : a.sentiment === 'Mixed' ? 'Analytical'
+    : a.sentiment === 'Negative' ? 'Emotive'
+    : 'Analytical';
+
+  return {
+    score: composite,
+    factors: { sourceCred, corroboration, languageBias, factCheckHistory, deepfakeLikelihood },
+    marker,
+    note: `${a.source} coverage. Corroborated by ${a.crossReferences} outlet${a.crossReferences === 1 ? '' : 's'}. Composite from source credibility, cross-corroboration, language, and fact-check history.`,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Executive digest + Priority pin
+// ---------------------------------------------------------------------------
+
+export const executiveDigest: Record<string, string> = {
+  'command-center': '5 narratives active. Unemployment critique needs response within 24h. Sentiment trending -3% overnight.',
+  'story-clusters': '3 events reached cluster threshold today. Gati Shakti saturated across 14 outlets; PLFS critique still escalating.',
+  'media-feed': '45 items ingested today. 4 flagged low Genuine Score. 2 filtered as non-ministry noise.',
+  'narratives': '2 escalating, 3 stable, 1 saturated. Only PLFS methodology needs an officer decision this cycle.',
+  'regional': 'Hindi Belt volume high with rising PM-KISAN risk. South India and Northeast still show coverage gaps.',
+  'early-warning': '1 HIGH-severity alert requires action in the next 24 hours. 2 MEDIUM alerts on track for pre-emptive briefing.',
+  'cross-platform': 'Print and TV mostly positive; social sentiment 6 points lower. Amplification signature matches Feb 2024 jobs cycle.',
+  'penetration': '2 messages at CRITICAL/HIGH under-penetration. Employment generation is the most under-reported.',
+  'misinfo': '2 HIGH-spread claims verified FALSE. MGNREGA-diversion post is closest to mainstream mainstreaming.',
+  'briefing': 'Finance brief ready. Priority: PLFS methodology response before evening news cycles.',
+};
+
+// Priority pin — auto-picked one item to attend first.
+export const topPriority = {
+  articleId: 2 as number,
+  clusterId: 2 as number,
+  alertId: 1 as number,
+  reason: 'Highest escalation probability (78%) with a matched historical pattern that ran 3 weeks unbriefed.',
+  action: 'Publish PLFS vs ICLS-19 comparison before 18:00 IST. Brief MoSPI + Labour spokesperson jointly.',
+};
+
+// ---------------------------------------------------------------------------
+// Ask Sentinel
+// ---------------------------------------------------------------------------
+
+export interface AskResponse {
+  patterns: RegExp[];
+  response: string;
+  citations: number[]; // article ids
+}
+
+export const askSentinelSuggestions: string[] = [
+  'What should I prep for tomorrow\'s Finance briefing?',
+  'Give me the opposition angle on employment this week.',
+  'Where is our messaging under-penetrating in the south?',
+  'What misinformation is trending right now?',
+  'Show me all critical coverage on Ayushman Bharat.',
+  'Which narratives are still escalating after 24h?',
+];
+
+export const askSentinelResponses: AskResponse[] = [
+  {
+    patterns: [/finance.*brief/i, /prep.*finance/i, /tomorrow.*brief/i],
+    response:
+      'For tomorrow\'s Finance briefing, three items dominate.\n\n' +
+      'First — Gati Shakti 2.0 is saturated across 14 outlets with mostly factual framing [c:1]. The next 24 hours should shift from announcement to district-level job and corridor maps in Hindi and southern vernaculars [c:5]. English desks are covered; do not over-brief them.\n\n' +
+      'Second — the PLFS methodology critique [c:2] is escalating with a 78% probability of a full news cycle. It follows the exact sequence of the Feb 2024 jobs story: The Wire → Mint → NDTV panel → political pickup → Hindi regional. A joint MoSPI + Labour technical note before 18:00 IST is the highest-leverage action of the day [c:6].\n\n' +
+      'Third — the MGNREGA fund-diversion claim (2.3M impressions, FALSE) needs a visual debunk pushed through PIB Fact Check before it graduates to mainstream TV.',
+    citations: [1, 5, 2, 6],
+  },
+  {
+    patterns: [/opposition.*employ/i, /opposition.*angle.*jobs/i, /jobs.*critic/i, /unemploy.*critic/i, /plfs/i],
+    response:
+      'The opposition frame this week is *"official employment numbers overstate reality by 3.2 percentage points."*\n\n' +
+      'The technical origin is the Mint methodology story [c:2] — economists challenging the reclassification of gig workers as regular wage-earners. Congress packaged this as an alternative jobs report [c:6] and it is now on TV panels and Hindi dailies. Reddit is amplifying with critical tone [c:43].\n\n' +
+      'The clean counter is EPFO payroll additions (+18.6 lakh in Q1) [c:26] which the Business Standard piece already carries. Use that number, not a debate on the party film.',
+    citations: [2, 6, 43, 26],
+  },
+  {
+    patterns: [/south/i, /vernacular/i, /tamil|telugu|malayalam|kannada/i, /penetrat/i],
+    response:
+      'The south under-penetration this week is concentrated on the India-ASEAN corridor story.\n\n' +
+      'The Hindu carried it strongly at national English level [c:5], and X threads from exporter associations picked it up [c:16], but Tamil, Telugu, and Malayalam desks did not. The pickup number is 34% vs a 75% target.\n\n' +
+      'The recommended push: SME-export and port-jobs angles for Chennai, Vizag, and Kochi editions. Deccan Herald in Bangalore is already covering [c:14] and is a warm brief-and-follow.',
+    citations: [5, 16, 14],
+  },
+  {
+    patterns: [/misinfo/i, /misinformation/i, /viral.*claim/i, /fact.*check/i, /trending.*false/i],
+    response:
+      'Two claims cross the response threshold today.\n\n' +
+      '1) *"Government diverts MGNREGA funds to corporate subsidies"* — social-media originated, 2.3M impressions in 18 hours, uses a manipulated budget document. Verdict: FALSE. Route to PIB Fact Check immediately with a visual debunk of actual allocations.\n\n' +
+      '2) *"PM misquoted on economic growth targets at ASEAN summit"* — 450K YouTube views. Verdict: MISLEADING (quote out of context). Release full transcript and clip to fact-check networks.\n\n' +
+      'The Railway privatisation claim is still at 120K reach and only on small portals — clarify once, then monitor.',
+    citations: [],
+  },
+  {
+    patterns: [/ayushman|health/i, /critical.*health/i],
+    response:
+      'Ayushman Bharat 2.0 coverage this week is *balanced but hardening*.\n\n' +
+      'The Indian Express headline number (4.2 crore new enrolments in Phase 1) is a clear win [c:8]. But regional press in six states — including Sambad and Onmanorama — is running empanelment gap and package-rate stories [c:17][c:18][c:19]. Sustained mixed coverage without a state-wise reply becomes a hardened critical narrative within a week.\n\n' +
+      'Priority action: state-wise empanelment table for the six lagging states via PIB regional units.',
+    citations: [8, 17, 18, 19],
+  },
+  {
+    patterns: [/escalat|still\s+active|24h|hot/i],
+    response:
+      'Two narratives are still climbing after 24 hours.\n\n' +
+      'PLFS methodology critique is at the top with a 78% escalation probability [c:2]. The Congress alternative jobs report [c:6] arrived on TV yesterday; Hindi dailies are picking it up today. Historical fingerprint matches Feb 2024.\n\n' +
+      'PM-KISAN disbursement delay [c:4] is at 52% escalation probability, regional for now but heading for national front pages if no district-wise status note is issued from PIB Lucknow and Patna.\n\n' +
+      'Everything else has plateaued — Gati Shakti is saturated, ASEAN corridor is stable-positive, Ayushman is mixed-stable, Defence procurement is routine.',
+    citations: [2, 6, 4],
+  },
+  {
+    patterns: [/gati|infra|corridor.*national|cabinet.*approv/i],
+    response:
+      'Gati Shakti 2.0 is the day\'s volume story, not the risk story.\n\n' +
+      'Times of India led with the Rs 2.5 lakh crore Cabinet approval [c:1]. Hindi and business desks amplified (Mint, Dainik Jagran, CNBC-TV18). Genuine Score sits at 90 — high corroboration, factual language.\n\n' +
+      'The only sceptical read is the matching-grant angle. Do not over-brief English desks. Shift to district job maps and vernacular explainers for the next cycle.',
+    citations: [1],
+  },
+  {
+    patterns: [/kisan|pm-kisan|disburse|agricultur/i],
+    response:
+      'PM-KISAN 17th instalment delays are a regional escalation, not yet a national front-page cycle [c:4].\n\n' +
+      'Amar Ujala and district Hindi pages are naming blocks and citing DBT lag. Escalation probability 52%. If Lucknow and Patna PIB units do not issue a district-wise status note today, this graduates to national dailies tomorrow.\n\n' +
+      'Recommended: named-block clarification, not a generic "payments are on track" line.',
+    citations: [4],
+  },
+  {
+    patterns: [/genuine|bus accident|real estate|advert|junk|noise|keyword/i],
+    response:
+      'Two items this cycle show why keyword systems fail and Genuine Score exists.\n\n' +
+      'The Delhi bus accident [c:3] scored Genuine 22 — a local incident with no ministry signal. Older clipping tools tagged it Negative for Transport because of the word "accident".\n\n' +
+      'A Hindustan Times real-estate advertisement [c:7] scored Genuine 15. Zero editorial content. Suppress from ministry queues.\n\n' +
+      'Officers should treat Genuine below 40 as noise unless a human overrides.',
+    citations: [3, 7],
+  },
+  {
+    patterns: [/defence|tejas|agniveer|mod\b|military/i],
+    response:
+      'Defence this week is capability coverage, not scandal.\n\n' +
+      'Tejas Mk2 and carrier-deployment copy is running on specialist beats [c:11] with Genuine in the 80s. Agniveer family sentiment is the only mixed read.\n\n' +
+      'No action required beyond the standing Aero India 2027 media plan. Do not elevate this into the morning brief unless a new critical outlet appears.',
+    citations: [11],
+  },
+  {
+    patterns: [/northeast|digital india|meity|assam|shillong/i],
+    response:
+      'Digital India 3.0 in the Northeast is a coverage-gap story, not a crisis [c:23].\n\n' +
+      'Assam Tribune and hill-state papers carried village-demo copy, but pickup is thin versus the national English desks. Mixed tone persists where last-mile connectivity is unnamed.\n\n' +
+      'Push success stories from connected villages via MeitY regional office before a critical vacuum fills the gap.',
+    citations: [23],
+  },
+];
+
+export const askSentinelFallback = (): AskResponse => ({
+  patterns: [],
+  response:
+    'Here\'s what stands out across today\'s coverage.\n\n' +
+    'The dominant positive story is the Gati Shakti 2.0 approval, saturated in national English and Hindi press [c:1][c:5]. The dominant risk is the PLFS methodology critique, which is escalating with a 78% probability [c:2][c:6]. Regional watch item: PM-KISAN disbursement delays in the Hindi belt [c:4]. Health desks should note Ayushman Bharat 2.0 mixed coverage [c:8].\n\n' +
+    'For a more specific answer, try one of the suggested questions, or ask about a ministry, region, or narrative.',
+  citations: [1, 5, 2, 6, 4, 8],
+});
+
+export function matchAskResponse(query: string): AskResponse {
+  const q = query.toLowerCase().trim();
+  if (!q) return askSentinelFallback();
+  for (const r of askSentinelResponses) {
+    if (r.patterns.some((p) => p.test(q))) return r;
+  }
+  return askSentinelFallback();
 }

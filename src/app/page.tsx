@@ -1,12 +1,12 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity, TrendingUp, AlertTriangle, BarChart3,
   ArrowUpRight, ArrowDownRight, Newspaper, Filter, Clock,
   CheckCircle2, XCircle, AlertCircle, ChevronRight,
   Globe, Tv, Smartphone, Download, Mail, Zap, Eye,
-  MessageSquare, Share2, ShieldAlert, Radio, MapPin, Flame,
+  MessageSquare, Radio, MapPin, Flame, Layers, ShieldAlert,
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area,
@@ -15,17 +15,32 @@ import {
 import {
   kpiData, sentimentBreakdown, coverageTrend, narratives, articles,
   alerts, regionData, messagePenetration, misinfoItems,
-  crossPlatformData, ministryBriefing, percolationData,
-  mediaFilterKey, type Article, type Narrative,
+  crossPlatformData, ministryBriefing, ministryBriefings, percolationData,
+  storyClusters, computeGenuine, articleCluster, mediaFilterKey,
+  type Article, type Narrative, type StoryCluster,
 } from '@/data/mockData';
-import { useFilters, useTheme } from '@/components/Providers';
+import { useDensity, useFilters, useFocus, useSnooze, useTheme } from '@/components/Providers';
 import ArticleModal from '@/components/ArticleModal';
 import NarrativeModal from '@/components/NarrativeModal';
+import StanceCompareModal from '@/components/StanceCompareModal';
+import ExecutiveDigest from '@/components/ExecutiveDigest';
+import PriorityPin from '@/components/PriorityPin';
+import GenuineRing from '@/components/GenuineRing';
+import MetricChip from '@/components/MetricChip';
+import StoryClusterCard from '@/components/StoryClusterCard';
+import SnoozeButton from '@/components/SnoozeButton';
+import ClickableCard from '@/components/ClickableCard';
+import ChartTooltip from '@/components/ChartTooltip';
+
+// ---------------------------------------------------------------------------
+// Local detail context — connects card clicks to the modal state at page root.
+// ---------------------------------------------------------------------------
 
 const DetailCtx = createContext<{
   openArticle: (id: number) => void;
   openNarrative: (id: number) => void;
-}>({ openArticle: () => {}, openNarrative: () => {} });
+  openCluster: (id: number) => void;
+}>({ openArticle: () => {}, openNarrative: () => {}, openCluster: () => {} });
 
 function useDetail() {
   return useContext(DetailCtx);
@@ -36,19 +51,12 @@ function useChartTheme() {
   const light = theme === 'light';
   return {
     tick: light ? '#52525b' : '#a1a1aa',
-    tooltip: {
-      background: light ? '#ffffff' : '#0f0f0f',
-      border: '1px solid var(--border-subtle)',
-      borderRadius: 8,
-      color: light ? '#09090b' : '#f5f5f5',
-      fontSize: 12,
-    },
   };
 }
 
 function SectionHeader({ title, subtitle, badge }: { title: string; subtitle?: string; badge?: string }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-4">
       <div>
         <h2 className="section-title flex items-center gap-3 flex-wrap">
           {title}
@@ -87,11 +95,11 @@ function ThreatLevelBanner() {
 
   return (
     <div
-      className="flex items-center gap-3 px-5 py-3 rounded-xl border"
+      className="flex items-center gap-3 px-4 py-2 rounded-xl border"
       style={{ borderColor: `${map.color}4d`, background: `${map.color}14` }}
     >
-      <div className="w-3 h-3 rounded-full animate-pulse" style={{ background: map.color }} />
-      <span className="text-sm font-semibold tracking-wider" style={{ color: map.color }}>
+      <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: map.color }} />
+      <span className="text-xs md:text-sm font-semibold tracking-wider" style={{ color: map.color }}>
         THREAT LEVEL: {map.label}
       </span>
     </div>
@@ -103,18 +111,18 @@ function KPICard({ title, value, delta, icon: Icon, positive }: {
   icon: React.ElementType; positive?: boolean;
 }) {
   return (
-    <div className="glass-card p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div className="w-10 h-10 rounded-lg border border-border-strong flex items-center justify-center">
-          <Icon className="w-5 h-5 text-text-primary" />
+    <div className="glass-card p-4">
+      <div className="flex items-start justify-between mb-2">
+        <div className="w-8 h-8 rounded-lg border border-border-subtle flex items-center justify-center">
+          <Icon className="w-4 h-4 text-text-secondary" />
         </div>
-        <span className={`flex items-center gap-1 text-xs font-medium ${positive !== false ? 'text-accent-green' : 'text-accent-red'}`}>
+        <span className={`flex items-center gap-1 text-[11px] font-medium ${positive !== false ? 'text-accent-green' : 'text-accent-red'}`}>
           {positive !== false ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
           {delta}
         </span>
       </div>
-      <p className="text-2xl font-bold text-text-primary">{typeof value === 'number' ? value.toLocaleString() : value}</p>
-      <p className="text-xs text-text-muted mt-1 uppercase tracking-wider">{title}</p>
+      <p className="text-xl md:text-2xl font-bold text-text-primary">{typeof value === 'number' ? value.toLocaleString() : value}</p>
+      <p className="text-[10px] md:text-xs text-text-muted mt-1 uppercase tracking-wider">{title}</p>
     </div>
   );
 }
@@ -122,13 +130,13 @@ function KPICard({ title, value, delta, icon: Icon, positive }: {
 function SentimentDonut() {
   const { tick } = useChartTheme();
   return (
-    <div className="glass-card p-5">
-      <h3 className="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">Sentiment Distribution</h3>
-      <div className="flex flex-col sm:flex-row items-center gap-6">
-        <div className="w-40 h-40">
+    <div className="glass-card p-4">
+      <h3 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wider">Sentiment Distribution</h3>
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="w-36 h-36">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={sentimentBreakdown} cx="50%" cy="50%" innerRadius={45} outerRadius={65} dataKey="value" strokeWidth={0}>
+              <Pie data={sentimentBreakdown} cx="50%" cy="50%" innerRadius={42} outerRadius={62} dataKey="value" strokeWidth={0}>
                 {sentimentBreakdown.map((entry, i) => (
                   <Cell key={i} fill={entry.color} />
                 ))}
@@ -136,21 +144,21 @@ function SentimentDonut() {
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <div className="flex-1 space-y-2.5 w-full">
+        <div className="flex-1 space-y-2 w-full">
           {sentimentBreakdown.map((item) => (
             <div key={item.name} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: item.color }} />
-                <span className="text-sm text-text-secondary">{item.name}</span>
+                <div className="w-2 h-2 rounded-full" style={{ background: item.color }} />
+                <span className="text-xs text-text-secondary">{item.name}</span>
               </div>
-              <span className="text-sm font-semibold text-text-primary">{item.value}%</span>
+              <span className="text-xs font-semibold text-text-primary">{item.value}%</span>
             </div>
           ))}
           <div className="pt-2 border-t border-border-subtle">
             <div className="flex justify-between">
-              <span className="text-xs text-text-muted">Total Coverage</span>
-              <span className="text-xs font-semibold text-text-primary" style={{ color: tick }}>
-                {kpiData.coverageVolume.toLocaleString()} items
+              <span className="text-[11px] text-text-muted">Total coverage</span>
+              <span className="text-[11px] font-semibold text-text-primary" style={{ color: tick }}>
+                {kpiData.coverageVolume.toLocaleString()}
               </span>
             </div>
           </div>
@@ -161,11 +169,11 @@ function SentimentDonut() {
 }
 
 function CoverageTrendChart() {
-  const { tick, tooltip } = useChartTheme();
+  const { tick } = useChartTheme();
   return (
-    <div className="glass-card p-5">
-      <h3 className="text-sm font-semibold text-text-secondary mb-4 uppercase tracking-wider">7-Day Sentiment Trend</h3>
-      <div className="h-48">
+    <div className="glass-card p-4">
+      <h3 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wider">7-Day Sentiment Trend</h3>
+      <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={coverageTrend}>
             <defs>
@@ -180,7 +188,7 @@ function CoverageTrendChart() {
             </defs>
             <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: tick, fontSize: 11 }} />
             <YAxis axisLine={false} tickLine={false} tick={{ fill: tick, fontSize: 11 }} />
-            <Tooltip contentStyle={tooltip} />
+            <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border-strong)', strokeWidth: 1 }} />
             <Area type="monotone" dataKey="positive" stackId="1" stroke="#10b981" fill="url(#gradPos)" strokeWidth={2} />
             <Area type="monotone" dataKey="neutral" stackId="1" stroke="#6b7280" fill="rgba(107,114,128,0.1)" strokeWidth={1.5} />
             <Area type="monotone" dataKey="mixed" stackId="1" stroke="#f59e0b" fill="rgba(245,158,11,0.1)" strokeWidth={1.5} />
@@ -201,6 +209,8 @@ function toneColor(tone: string) {
 
 function NarrativeRow({ n, rank }: { n: Narrative; rank: number }) {
   const { openNarrative } = useDetail();
+  const { density } = useDensity();
+  const compact = density === 'compact';
   return (
     <tr
       className="border-b border-border-subtle hover:bg-bg-card-hover transition-colors cursor-pointer"
@@ -208,14 +218,16 @@ function NarrativeRow({ n, rank }: { n: Narrative; rank: number }) {
     >
       <td className="py-3 px-3 text-center text-text-muted text-sm">{rank}</td>
       <td className="py-3 px-3 min-w-[220px]">
-        <p className="text-sm text-text-primary font-medium leading-snug">{n.title}</p>
-        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-          {n.ministries.map((m) => (
-            <span key={m} className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-secondary">
-              {m.replace('Ministry of ', '')}
-            </span>
-          ))}
-        </div>
+        <p className={`text-sm text-text-primary font-medium leading-snug ${compact ? 'truncate max-w-[420px]' : ''}`}>{n.title}</p>
+        {!compact && (
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            {n.ministries.map((m) => (
+              <span key={m} className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-secondary">
+                {m.replace('Ministry of ', '')}
+              </span>
+            ))}
+          </div>
+        )}
       </td>
       <td className="py-3 px-3">
         <span className="text-xs font-semibold" style={{ color: toneColor(n.tone) }}>{n.tone}</span>
@@ -230,12 +242,11 @@ function NarrativeRow({ n, rank }: { n: Narrative; rank: number }) {
         <div className="w-20 h-8">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={n.trendData.map((v, i) => ({ v, i }))}>
-              <Line type="monotone" dataKey="v" stroke={n.tone === 'Critical' ? '#ef4444' : '#a1a1aa'} strokeWidth={1.5} dot={false} />
+              <Line type="monotone" dataKey="v" stroke={toneColor(n.tone)} strokeWidth={1.5} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </td>
-      <td className="py-3 px-3 text-xs text-text-secondary max-w-[200px]">{n.suggestedAction}</td>
     </tr>
   );
 }
@@ -244,21 +255,26 @@ function CommandCenter({ filteredNarratives }: { filteredNarratives: Narrative[]
   return (
     <section id="command-center" className="px-4 md:px-8 py-8 scroll-mt-20">
       <SectionHeader title="Command Center" subtitle="Overview" />
+      <ExecutiveDigest section="command-center" />
       <ThreatLevelBanner />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+      <div className="mt-4">
+        <PriorityPin />
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
         <KPICard title="Coverage Volume" value={kpiData.coverageVolume} delta={kpiData.coverageDelta} icon={Activity} />
         <KPICard title="Active Narratives" value={filteredNarratives.length} delta={kpiData.narrativeDelta} icon={TrendingUp} />
         <KPICard title="Pending Alerts" value={kpiData.pendingAlerts} delta={kpiData.alertsDelta} icon={AlertTriangle} positive={false} />
         <KPICard title="Confidence Score" value={`${kpiData.aiConfidence}%`} delta={kpiData.confidenceDelta} icon={BarChart3} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
         <SentimentDonut />
         <CoverageTrendChart />
       </div>
 
-      <div className="glass-card mt-4 overflow-hidden">
+      <div className="glass-card mt-3 overflow-hidden">
         <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Top Media Narratives</h3>
           <span className="text-xs text-text-muted">{filteredNarratives.length} tracked</span>
@@ -267,16 +283,15 @@ function CommandCenter({ filteredNarratives }: { filteredNarratives: Narrative[]
           <div className="p-6"><EmptyFilter /></div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px]">
+            <table className="w-full min-w-[640px]">
               <thead>
-                <tr className="border-b border-border-subtle text-xs text-text-muted uppercase tracking-wider">
+                <tr className="border-b border-border-subtle text-[11px] text-text-muted uppercase tracking-wider">
                   <th className="py-2.5 px-3 text-center">#</th>
                   <th className="py-2.5 px-3 text-left">Narrative</th>
                   <th className="py-2.5 px-3 text-left">Tone</th>
                   <th className="py-2.5 px-3 text-left">Spread</th>
                   <th className="py-2.5 px-3 text-left">Risk</th>
                   <th className="py-2.5 px-3 text-left">Trend</th>
-                  <th className="py-2.5 px-3 text-left">Suggested Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -292,84 +307,139 @@ function CommandCenter({ filteredNarratives }: { filteredNarratives: Narrative[]
   );
 }
 
-function ArticleCard({ article }: { article: Article }) {
-  const { openArticle } = useDetail();
+// ---------------------------------------------------------------------------
+// Article card — density-aware. Compact = one line + chips + ring.
+// ---------------------------------------------------------------------------
+
+function ArticleCard({ article, focused }: { article: Article; focused?: boolean }) {
+  const { openArticle, openCluster } = useDetail();
+  const { density } = useDensity();
+  const compact = density === 'compact';
+  const genuine = computeGenuine(article);
+  const cluster = articleCluster(article.id);
   const sent = article.sentiment;
-  const sentColor = toneColor(sent === 'Negative' ? 'Critical' : sent);
+  const sentTone = sent === 'Positive' ? 'positive' : sent === 'Negative' ? 'critical' : sent === 'Mixed' ? 'mixed' : 'neutral';
 
   return (
-    <button
-      type="button"
-      onClick={() => openArticle(article.id)}
-      className="glass-card clickable p-5 animate-slide-in text-left w-full"
+    <ClickableCard
+      onActivate={() => openArticle(article.id)}
+      label={article.headline}
+      dataArticleId={article.id}
+      className={`glass-card clickable w-full text-left ${focused ? 'article-focused' : ''} ${compact ? 'p-3' : 'p-5 animate-slide-in'}`}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border"
-              style={{ color: sentColor, borderColor: `${sentColor}55`, background: `${sentColor}18` }}
-            >
-              {article.sentiment}
-            </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-border-subtle text-text-secondary">
-              RELEVANCE: {article.relevanceScore}%
-            </span>
-            {article.mediaType !== 'Print' && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
-                {article.mediaType}
-              </span>
-            )}
-            {article.crossReferences > 3 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted flex items-center gap-1">
-                <Share2 className="w-2.5 h-2.5" /> {article.crossReferences} outlets
-              </span>
-            )}
-          </div>
-
-          <h4 className="text-sm font-semibold text-text-primary leading-snug mb-1.5">{article.headline}</h4>
-          <p className="text-xs text-text-secondary leading-relaxed mb-3">{article.summary}</p>
-
-          <div className="flex items-center gap-4 text-[11px] text-text-muted mb-2.5 flex-wrap">
-            <span className="flex items-center gap-1"><Newspaper className="w-3 h-3" /> {article.source}</span>
-            <span>{article.edition}</span>
-            <span>{article.page}</span>
-            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {article.date}</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
-            {article.ministryTags.map((tag) => (
-              <span key={tag.name} className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-secondary">
-                {tag.name.replace('Ministry of ', '')} <span className="text-text-muted">{tag.confidence}%</span>
-              </span>
-            ))}
-          </div>
-
-          <div className="text-[11px] px-3 py-2 rounded-lg bg-bg-surface border border-border-subtle">
-            <span className="font-semibold text-text-secondary">Analysis: </span>
-            <span className="text-text-secondary">{article.sentimentReason}</span>
-          </div>
-
-          {'aiFlag' in article && article.aiFlag ? (
-            <div className="mt-2 text-[11px] px-3 py-2 rounded-lg border border-accent-amber/30 bg-accent-amber/8">
-              <span className="font-semibold text-accent-amber">Filter note: </span>
-              <span className="text-accent-amber/90">{article.aiFlag}</span>
+      {compact ? (
+        <div className="flex items-center gap-3">
+          <GenuineRing data={genuine} size="sm" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-text-primary font-medium leading-snug truncate">
+              {article.headline}
+            </p>
+            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: toneColor(sent === 'Negative' ? 'Critical' : sent) }} />
+              <MetricChip value={sent} tone={sentTone as 'positive' | 'critical' | 'mixed' | 'neutral'} />
+              <MetricChip value={article.source} tone="muted" />
+              <MetricChip label="Rel" value={`${article.relevanceScore}%`} tone="muted" />
+              {article.aiFlag ? (
+                <MetricChip icon={<AlertTriangle className="w-2.5 h-2.5" />} value="Noise" tone="mixed" />
+              ) : cluster ? (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); openCluster(cluster.id); }}
+                  className="pointer-events-auto inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border border-border-strong text-text-primary hover:bg-bg-card-hover"
+                >
+                  <Layers className="w-2.5 h-2.5" /> Cluster
+                </button>
+              ) : null}
             </div>
-          ) : null}
+          </div>
         </div>
+      ) : (
+        <ComfortableArticleCard article={article} genuine={genuine} />
+      )}
+    </ClickableCard>
+  );
+}
 
-        <div className="w-24 h-32 sm:w-28 sm:h-36 rounded-lg bg-[#f4f1ea] border border-border-subtle flex items-center justify-center shrink-0 overflow-hidden">
+function ComfortableArticleCard({ article, genuine }: { article: Article; genuine: ReturnType<typeof computeGenuine> }) {
+  const sent = article.sentiment;
+  const sentColor = toneColor(sent === 'Negative' ? 'Critical' : sent);
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span
+            className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border"
+            style={{ color: sentColor, borderColor: `${sentColor}55`, background: `${sentColor}18` }}
+          >
+            {article.sentiment}
+          </span>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-border-subtle text-text-secondary">
+            RELEVANCE: {article.relevanceScore}%
+          </span>
+          {article.mediaType !== 'Print' && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
+              {article.mediaType}
+            </span>
+          )}
+          {article.crossReferences > 3 && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
+              {article.crossReferences} outlets
+            </span>
+          )}
+        </div>
+        <h4 className="text-sm font-semibold text-text-primary leading-snug mb-1.5">{article.headline}</h4>
+        <p className="text-xs text-text-secondary leading-relaxed mb-3">{article.summary}</p>
+        <div className="flex items-center gap-4 text-[11px] text-text-muted mb-2.5 flex-wrap">
+          <span className="flex items-center gap-1"><Newspaper className="w-3 h-3" /> {article.source}</span>
+          <span>{article.edition}</span>
+          <span>{article.page}</span>
+          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {article.date}</span>
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+          {article.ministryTags.map((tag) => (
+            <span key={tag.name} className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-secondary">
+              {tag.name.replace('Ministry of ', '')} <span className="text-text-muted">{tag.confidence}%</span>
+            </span>
+          ))}
+        </div>
+        <div className="text-[11px] px-3 py-2 rounded-lg bg-bg-surface border border-border-subtle">
+          <span className="font-semibold text-text-secondary">Analysis: </span>
+          <span className="text-text-secondary">{article.sentimentReason}</span>
+        </div>
+        {'aiFlag' in article && article.aiFlag ? (
+          <div className="mt-2 text-[11px] px-3 py-2 rounded-lg border border-accent-amber/30 bg-accent-amber/8">
+            <span className="font-semibold text-accent-amber">Filter note: </span>
+            <span className="text-accent-amber/90">{article.aiFlag}</span>
+          </div>
+        ) : null}
+      </div>
+      <div className="flex flex-col items-center gap-2 shrink-0">
+        <GenuineRing data={genuine} size="md" />
+        <div className="w-24 h-32 sm:w-28 sm:h-36 rounded-lg bg-[#f4f1ea] border border-border-subtle flex items-center justify-center overflow-hidden">
           <div className="p-2 text-center">
             <Newspaper className="w-5 h-5 text-[#666] mx-auto mb-1" />
             <p className="text-[8px] text-[#444] font-serif leading-tight line-clamp-4">{article.headline}</p>
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
-function MediaFeed({ filteredArticles }: { filteredArticles: Article[] }) {
+// ---------------------------------------------------------------------------
+// Media Coverage — Story Cluster strip + article feed
+// ---------------------------------------------------------------------------
+
+function MediaFeed({
+  filteredArticles,
+  filteredClusters,
+  focusArticleId,
+}: {
+  filteredArticles: Article[];
+  filteredClusters: StoryCluster[];
+  focusArticleId: number | null;
+}) {
+  const { openCluster } = useDetail();
   const [selectedSentiment, setSelectedSentiment] = useState('All');
   const [minRelevance, setMinRelevance] = useState(0);
 
@@ -383,16 +453,39 @@ function MediaFeed({ filteredArticles }: { filteredArticles: Article[] }) {
     <section id="media-feed" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
       <SectionHeader title="Media Coverage" subtitle="Filtered coverage across print, digital, and broadcast" />
 
-      <div className="glass-card p-4 mb-5 flex items-center gap-3 flex-wrap">
+      <div className="mb-5">
+        <ExecutiveDigest section="story-clusters" />
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-[11px] uppercase tracking-wider text-text-muted flex items-center gap-2">
+            <Layers className="w-3.5 h-3.5" /> Story clusters ({filteredClusters.length})
+          </h3>
+          <span className="text-[11px] text-text-muted">Same event, N outlets</span>
+        </div>
+        {filteredClusters.length === 0 ? (
+          <div className="glass-card p-6 text-center text-sm text-text-muted">
+            No clusters match current filters.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {filteredClusters.map((c) => (
+              <StoryClusterCard key={c.id} cluster={c} onOpen={openCluster} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ExecutiveDigest section="media-feed" />
+
+      <div className="glass-card p-3 mb-4 flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-text-muted" />
-          <span className="text-xs text-text-muted uppercase tracking-wider">Sentiment:</span>
+          <span className="text-[11px] text-text-muted uppercase tracking-wider">Sentiment</span>
         </div>
         {['All', 'Positive', 'Negative', 'Mixed', 'Neutral'].map((s) => (
           <button
             key={s}
             onClick={() => setSelectedSentiment(s)}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+            className={`text-xs px-3 py-1 rounded-full border transition-colors ${
               selectedSentiment === s
                 ? 'border-border-strong text-text-primary bg-bg-card-hover'
                 : 'text-text-secondary border-border-subtle hover:border-border-strong'
@@ -402,7 +495,7 @@ function MediaFeed({ filteredArticles }: { filteredArticles: Article[] }) {
           </button>
         ))}
         <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto">
-          <span className="text-xs text-text-muted">Min relevance:</span>
+          <span className="text-xs text-text-muted">Min relevance</span>
           <input
             type="range"
             min="0"
@@ -415,9 +508,9 @@ function MediaFeed({ filteredArticles }: { filteredArticles: Article[] }) {
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {filtered.map((article) => (
-          <ArticleCard key={article.id} article={article} />
+          <ArticleCard key={article.id} article={article} focused={focusArticleId === article.id} />
         ))}
         {filtered.length === 0 && <EmptyFilter />}
       </div>
@@ -425,110 +518,111 @@ function MediaFeed({ filteredArticles }: { filteredArticles: Article[] }) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Narratives — percolation cards + cluster strip (replaces cross-ref matrix)
+// ---------------------------------------------------------------------------
+
 function NarrativeIntelligence({
-  filteredNarratives,
   filteredPercolation,
+  filteredClusters,
 }: {
-  filteredNarratives: Narrative[];
   filteredPercolation: typeof percolationData;
+  filteredClusters: StoryCluster[];
 }) {
-  const { openNarrative } = useDetail();
+  const { openNarrative, openCluster } = useDetail();
+  const { isSnoozed } = useSnooze();
+  const visiblePercolation = filteredPercolation.filter((p) => !isSnoozed(`narrative-${p.id}`));
   return (
     <section id="narratives" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
       <SectionHeader title="Narratives" subtitle="Story clusters and cross-outlet spread" />
+      <ExecutiveDigest section="narratives" />
 
       <div className="space-y-4">
-      {filteredPercolation.length === 0 ? (
-        <EmptyFilter />
-      ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredPercolation.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => openNarrative(p.id)}
-            className="glass-card clickable p-4 text-left flex flex-col min-h-0"
-          >
-            <h4 className="text-sm font-semibold text-text-primary leading-snug line-clamp-2">{p.narrative}</h4>
-            <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border ${
-                p.status === 'ESCALATING'
-                  ? 'border-accent-red/30 text-accent-red'
-                  : p.status === 'SATURATED'
-                    ? 'border-accent-green/30 text-accent-green'
-                    : 'border-border-strong text-text-secondary'
-              }`}>
-                {p.status}
-              </span>
-              <span className="text-[11px] text-text-muted">
-                Velocity: <span className={p.velocity === 'High' ? 'text-accent-red' : 'text-text-secondary'}>{p.velocity}</span>
-              </span>
-            </div>
-            <div className="relative pl-5 flex-1">
-              {p.timeline.slice(0, 4).map((t, i, arr) => (
-                <div key={i} className="relative pb-3 last:pb-0">
-                  <div className="absolute -left-[17px] top-1 w-2.5 h-2.5 rounded-full bg-bg-card border-2 border-text-muted" />
-                  {i < arr.length - 1 && <div className="absolute -left-[12px] top-3.5 bottom-0 w-px bg-border-strong" />}
-                  <p className="text-[10px] font-mono text-text-muted">{t.day}</p>
-                  <p className="text-xs text-text-primary leading-snug">{t.outlet}</p>
-                  <p className="text-[10px] text-text-muted">{t.type}</p>
+        {visiblePercolation.length === 0 ? (
+          filteredPercolation.length > 0
+            ? <div className="glass-card p-6 text-center text-sm text-text-muted">All narrative cards handled for today.</div>
+            : <EmptyFilter />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {visiblePercolation.map((p) => (
+              <div key={p.id} className="relative">
+              <ClickableCard
+                onActivate={() => openNarrative(p.id)}
+                label={p.narrative}
+                className="glass-card clickable p-4 text-left min-h-0 w-full"
+                contentClassName="flex flex-col"
+              >
+                <h4 className="text-sm font-semibold text-text-primary leading-snug line-clamp-2">{p.narrative}</h4>
+                <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border ${
+                    p.status === 'ESCALATING'
+                      ? 'border-accent-red/30 text-accent-red'
+                      : p.status === 'SATURATED'
+                        ? 'border-accent-green/30 text-accent-green'
+                        : 'border-border-strong text-text-secondary'
+                  }`}>
+                    {p.status}
+                  </span>
+                  <span className="text-[11px] text-text-muted">
+                    Velocity: <span className={p.velocity === 'High' ? 'text-accent-red' : 'text-text-secondary'}>{p.velocity}</span>
+                  </span>
                 </div>
-              ))}
-              {p.timeline.length > 4 && (
-                <p className="text-[10px] text-text-muted mt-1">+{p.timeline.length - 4} more</p>
-              )}
-            </div>
-          </button>
-        ))}
-      </div>
-      )}
+                <div className="relative pl-5 flex-1">
+                  {p.timeline.slice(0, 4).map((t, i, arr) => (
+                    <div key={i} className="relative pb-3 last:pb-0">
+                      <div className="absolute -left-[17px] top-1 w-2.5 h-2.5 rounded-full bg-bg-card border-2 border-text-muted" />
+                      {i < arr.length - 1 && <div className="absolute -left-[12px] top-3.5 bottom-0 w-px bg-border-strong" />}
+                      <p className="text-[10px] font-mono text-text-muted">{t.day}</p>
+                      <p className="text-xs text-text-primary leading-snug">{t.outlet}</p>
+                      <p className="text-[10px] text-text-muted">{t.type}</p>
+                    </div>
+                  ))}
+                  {p.timeline.length > 4 && (
+                    <p className="text-[10px] text-text-muted mt-1">+{p.timeline.length - 4} more</p>
+                  )}
+                </div>
+              </ClickableCard>
+              <div className="absolute top-2 right-2 z-20">
+                <SnoozeButton id={`narrative-${p.id}`} />
+              </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-        <div className="glass-card p-5">
-          <h4 className="text-sm font-semibold text-text-secondary mb-3 uppercase tracking-wider">Narrative Cross-Reference Matrix</h4>
-          {filteredNarratives.length === 0 ? (
-            <EmptyFilter />
-          ) : (
+        {filteredClusters.length > 0 && (
+          <div className="glass-card p-4 md:p-5">
+            <h4 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wider flex items-center gap-2">
+              <Layers className="w-3.5 h-3.5" /> Same story across outlets
+            </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredNarratives.slice(0, 6).map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => openNarrative(n.id)}
-                  className="p-3 rounded-lg bg-bg-surface border border-border-subtle hover:border-border-strong hover:bg-bg-card-hover text-left"
-                >
-                  <p className="text-xs text-text-primary font-medium mb-2 line-clamp-2">{n.title}</p>
-                  <div className="h-6 mb-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={n.trendData.map((v, i) => ({ v, i }))}>
-                        <Line type="monotone" dataKey="v" stroke={n.tone === 'Critical' ? '#ef4444' : '#a1a1aa'} strokeWidth={1.5} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-text-muted">{n.outlets} outlets</span>
-                    <span className="text-[10px] font-semibold" style={{ color: toneColor(n.tone) }}>{n.tone}</span>
-                  </div>
-                </button>
+              {filteredClusters.slice(0, 3).map((c) => (
+                <StoryClusterCard key={c.id} cluster={c} onOpen={openCluster} />
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Regional intelligence
+// ---------------------------------------------------------------------------
+
 function RegionalIntelligence({ filteredRegions }: { filteredRegions: typeof regionData }) {
-  const { tick, tooltip } = useChartTheme();
+  const { tick } = useChartTheme();
   return (
     <section id="regional" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
       <SectionHeader title="Regional Coverage" subtitle="Regional coverage and gaps" />
+      <ExecutiveDigest section="regional" />
 
       {filteredRegions.length === 0 ? (
         <EmptyFilter />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
             {filteredRegions.map((r) => {
               const sentColor = r.sentimentScore >= 65 ? '#10b981' : r.sentimentScore >= 45 ? '#f59e0b' : '#ef4444';
               return (
@@ -573,14 +667,14 @@ function RegionalIntelligence({ filteredRegions }: { filteredRegions: typeof reg
             })}
           </div>
 
-          <div className="glass-card p-5 overflow-x-auto">
-            <h4 className="text-sm font-semibold text-text-secondary mb-3 uppercase tracking-wider">Regional Sentiment Overview</h4>
-            <div className="h-48 min-w-[320px]">
+          <div className="glass-card p-4 overflow-x-auto">
+            <h4 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wider">Regional Sentiment Overview</h4>
+            <div className="h-40 min-w-[320px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={filteredRegions} layout="vertical">
                   <XAxis type="number" domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fill: tick, fontSize: 11 }} />
                   <YAxis type="category" dataKey="name" width={130} axisLine={false} tickLine={false} tick={{ fill: tick, fontSize: 11 }} />
-                  <Tooltip contentStyle={tooltip} />
+                  <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--border-subtle)' }} />
                   <Bar dataKey="sentimentScore" radius={[0, 4, 4, 0]}>
                     {filteredRegions.map((r, i) => (
                       <Cell key={i} fill={r.sentimentScore >= 65 ? '#10b981' : r.sentimentScore >= 45 ? '#f59e0b' : '#ef4444'} fillOpacity={0.7} />
@@ -596,7 +690,15 @@ function RegionalIntelligence({ filteredRegions }: { filteredRegions: typeof reg
   );
 }
 
+// ---------------------------------------------------------------------------
+// Alerts
+// ---------------------------------------------------------------------------
+
 function EarlyWarningSection({ filteredAlerts }: { filteredAlerts: typeof alerts }) {
+  const { density } = useDensity();
+  const { isSnoozed } = useSnooze();
+  const compact = density === 'compact';
+  const visible = filteredAlerts.filter((a) => !isSnoozed(`alert-${a.id}`));
   const iconFor = (sev: string) => (sev === 'HIGH' ? Flame : sev === 'MEDIUM' ? AlertTriangle : Eye);
 
   return (
@@ -604,14 +706,30 @@ function EarlyWarningSection({ filteredAlerts }: { filteredAlerts: typeof alerts
       <SectionHeader
         title="Alerts"
         subtitle="Active alerts and predicted escalations"
-        badge={`${filteredAlerts.filter((a) => a.severity === 'HIGH').length} HIGH`}
+        badge={`${visible.filter((a) => a.severity === 'HIGH').length} HIGH`}
       />
+      <ExecutiveDigest section="early-warning" />
 
-      <div className="space-y-4">
-        {filteredAlerts.map((alert) => {
+      <div className="space-y-3">
+        {visible.map((alert) => {
           const SevIcon = iconFor(alert.severity);
           const color = alert.severity === 'HIGH' ? '#ef4444' : alert.severity === 'MEDIUM' ? '#f59e0b' : '#a1a1aa';
-          return (
+          return compact ? (
+            <div key={alert.id} className="glass-card p-3 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg border border-border-strong flex items-center justify-center shrink-0">
+                <SevIcon className="w-4 h-4" style={{ color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>{alert.severity}</span>
+                  <span className="text-[10px] text-text-muted">Escalation {alert.escalationProbability}%</span>
+                  <span className="text-[10px] text-text-muted">· {alert.timeToCritical}</span>
+                </div>
+                <p className="text-sm text-text-primary leading-snug truncate">{alert.title}</p>
+              </div>
+              <SnoozeButton id={`alert-${alert.id}`} />
+            </div>
+          ) : (
             <div key={alert.id} className="glass-card p-5">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-lg border border-border-strong flex items-center justify-center shrink-0">
@@ -620,9 +738,12 @@ function EarlyWarningSection({ filteredAlerts }: { filteredAlerts: typeof alerts
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <h4 className="text-sm font-semibold text-text-primary">{alert.title}</h4>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-border-subtle uppercase tracking-wider shrink-0" style={{ color }}>
-                      {alert.severity} RISK
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-border-subtle uppercase tracking-wider shrink-0" style={{ color }}>
+                        {alert.severity} RISK
+                      </span>
+                      <SnoozeButton id={`alert-${alert.id}`} />
+                    </div>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed mb-3">{alert.description}</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
@@ -670,11 +791,18 @@ function EarlyWarningSection({ filteredAlerts }: { filteredAlerts: typeof alerts
             </div>
           );
         })}
+        {visible.length === 0 && filteredAlerts.length > 0 && (
+          <div className="glass-card p-6 text-center text-sm text-text-muted">All alerts handled for today.</div>
+        )}
         {filteredAlerts.length === 0 && <EmptyFilter />}
       </div>
     </section>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Cross-Platform
+// ---------------------------------------------------------------------------
 
 function CrossPlatformSection() {
   const { filters } = useFilters();
@@ -702,8 +830,9 @@ function CrossPlatformSection() {
   return (
     <section id="cross-platform" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
       <SectionHeader title="Cross-Platform" subtitle="Coverage across print, TV, digital, social" />
+      <ExecutiveDigest section="cross-platform" />
 
-      <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
         {tabs.map((t) => {
           const TabIcon = t.icon;
           const disabled = Boolean(locked && locked !== t.key);
@@ -712,7 +841,7 @@ function CrossPlatformSection() {
               key={t.key}
               onClick={() => !disabled && setActiveTab(t.key)}
               disabled={disabled}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm border shrink-0 ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm border shrink-0 ${
                 tab === t.key
                   ? 'border-border-strong text-text-primary bg-bg-card-hover'
                   : disabled
@@ -730,15 +859,15 @@ function CrossPlatformSection() {
         })}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         {[
           { label: 'Positive', value: data.positive, color: '#10b981' },
           { label: 'Neutral', value: data.neutral, color: '#6b7280' },
           { label: tab === 'social' ? 'Negative' : 'Mixed', value: tab === 'social' ? data.negative : data.mixed, color: '#f59e0b' },
           { label: tab === 'social' ? 'Mixed' : 'Negative', value: tab === 'social' ? data.mixed : data.negative, color: '#ef4444' },
         ].map((item) => (
-          <div key={item.label} className="glass-card p-4 text-center">
-            <p className="text-2xl font-bold" style={{ color: item.color }}>{item.value}%</p>
+          <div key={item.label} className="glass-card p-3 text-center">
+            <p className="text-xl font-bold" style={{ color: item.color }}>{item.value}%</p>
             <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1">{item.label}</p>
           </div>
         ))}
@@ -781,28 +910,35 @@ function CrossPlatformSection() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Message Penetration
+// ---------------------------------------------------------------------------
+
 function MessagePenetrationSection({ filtered }: { filtered: typeof messagePenetration }) {
+  const { density } = useDensity();
+  const compact = density === 'compact';
   return (
     <section id="penetration" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
       <SectionHeader title="Message Penetration" subtitle="Intended message vs actual media pickup" />
+      <ExecutiveDigest section="penetration" />
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {filtered.map((mp, idx) => (
-          <div key={idx} className="glass-card p-5">
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <h4 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-                <Radio className="w-4 h-4 text-text-muted" />
-                {mp.message}
+          <div key={idx} className={`glass-card ${compact ? 'p-3' : 'p-5'}`}>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <h4 className="text-sm font-semibold text-text-primary flex items-center gap-2 flex-1 min-w-0">
+                <Radio className="w-4 h-4 text-text-muted shrink-0" />
+                <span className="truncate">{mp.message}</span>
               </h4>
               <span className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-border-subtle uppercase tracking-wider shrink-0">
                 {mp.priority}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
               {[
-                { label: 'National Pickup', value: mp.pickupNational },
-                { label: 'Regional Pickup', value: mp.pickupRegional },
-                { label: 'Digital Pickup', value: mp.pickupDigital },
+                { label: 'National', value: mp.pickupNational },
+                { label: 'Regional', value: mp.pickupRegional },
+                { label: 'Digital', value: mp.pickupDigital },
               ].map((channel) => (
                 <div key={channel.label}>
                   <div className="flex justify-between text-[10px] mb-1.5">
@@ -821,16 +957,18 @@ function MessagePenetrationSection({ filtered }: { filtered: typeof messagePenet
                 </div>
               ))}
             </div>
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1 p-2.5 rounded-lg border border-accent-amber/20 bg-accent-amber/5">
-                <p className="text-[10px] text-accent-amber font-semibold uppercase tracking-wider mb-1">Gap Identified</p>
-                <p className="text-xs text-text-secondary">{mp.gap}</p>
+            {!compact && (
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex-1 p-2.5 rounded-lg border border-accent-amber/20 bg-accent-amber/5">
+                  <p className="text-[10px] text-accent-amber font-semibold uppercase tracking-wider mb-1">Gap Identified</p>
+                  <p className="text-xs text-text-secondary">{mp.gap}</p>
+                </div>
+                <div className="flex-1 p-2.5 rounded-lg border border-border-subtle">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1">Recommended Action</p>
+                  <p className="text-xs text-text-secondary">{mp.action}</p>
+                </div>
               </div>
-              <div className="flex-1 p-2.5 rounded-lg border border-border-subtle">
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1">Recommended Action</p>
-                <p className="text-xs text-text-secondary">{mp.action}</p>
-              </div>
-            </div>
+            )}
           </div>
         ))}
         {filtered.length === 0 && <EmptyFilter />}
@@ -839,33 +977,61 @@ function MessagePenetrationSection({ filtered }: { filtered: typeof messagePenet
   );
 }
 
+// ---------------------------------------------------------------------------
+// Misinformation Watch
+// ---------------------------------------------------------------------------
+
 function MisinfoWatchSection({ filtered }: { filtered: typeof misinfoItems }) {
+  const { density } = useDensity();
+  const { isSnoozed } = useSnooze();
+  const compact = density === 'compact';
+  const visible = filtered.filter((m) => !isSnoozed(`misinfo-${m.id}`));
   return (
     <section id="misinfo" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
-      <SectionHeader title="Misinformation Watch" subtitle="False claims tracker with verification status" badge={`${filtered.length} Active`} />
+      <SectionHeader title="Misinformation Watch" subtitle="False claims tracker with verification status" badge={`${visible.length} Active`} />
+      <ExecutiveDigest section="misinfo" />
 
-      <div className="glass-card p-4 mb-5 flex items-center gap-6 flex-wrap">
+      <div className="glass-card p-3 mb-4 flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-accent-red" /><span className="text-xs text-text-secondary">FALSE</span></div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-accent-amber" /><span className="text-xs text-text-secondary">MISLEADING</span></div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-text-muted" /><span className="text-xs text-text-secondary">PENDING</span></div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-accent-green" /><span className="text-xs text-text-secondary">VERIFIED TRUE</span></div>
+          <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-accent-red" /><span className="text-xs text-text-secondary">FALSE</span></div>
+          <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-accent-amber" /><span className="text-xs text-text-secondary">MISLEADING</span></div>
+          <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-text-muted" /><span className="text-xs text-text-secondary">PENDING</span></div>
+          <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-accent-green" /><span className="text-xs text-text-secondary">VERIFIED</span></div>
         </div>
         <div className="sm:ml-auto text-xs text-text-muted">PIB Fact Check Unit</div>
       </div>
 
-      <div className="space-y-4">
-        {filtered.map((item) => {
+      <div className="space-y-3">
+        {visible.map((item) => {
           const isFalse = item.verificationStatus.startsWith('FALSE');
           const color = isFalse ? '#ef4444' : item.verificationStatus.startsWith('MISLEADING') ? '#f59e0b' : '#a1a1aa';
-          return (
+          return compact ? (
+            <div key={item.id} className="glass-card p-3 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg border border-border-strong flex items-center justify-center shrink-0">
+                <ShieldAlert className="w-4 h-4" style={{ color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color }}>
+                    {isFalse ? 'FALSE' : 'MISLEADING'}
+                  </span>
+                  <span className="text-[10px] text-text-muted">{item.spread}</span>
+                </div>
+                <p className="text-sm text-text-primary leading-snug truncate">{item.claim}</p>
+              </div>
+              <SnoozeButton id={`misinfo-${item.id}`} />
+            </div>
+          ) : (
             <div key={item.id} className="glass-card p-5">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-lg border border-border-strong flex items-center justify-center shrink-0">
                   <ShieldAlert className="w-5 h-5" style={{ color }} />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-text-primary mb-1.5">{item.claim}</h4>
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-sm font-semibold text-text-primary mb-1.5">{item.claim}</h4>
+                    <SnoozeButton id={`misinfo-${item.id}`} />
+                  </div>
                   <div className="flex items-center gap-4 mb-3 flex-wrap">
                     <span className="text-xs text-text-muted flex items-center gap-1"><Globe className="w-3 h-3" /> {item.sourceType}</span>
                     <span className="text-xs font-semibold" style={{ color: item.spreadLevel === 'high' ? '#ef4444' : item.spreadLevel === 'medium' ? '#f59e0b' : '#a1a1aa' }}>
@@ -886,24 +1052,29 @@ function MisinfoWatchSection({ filtered }: { filtered: typeof misinfoItems }) {
             </div>
           );
         })}
+        {visible.length === 0 && filtered.length > 0 && (
+          <div className="glass-card p-6 text-center text-sm text-text-muted">All claims marked handled for today.</div>
+        )}
         {filtered.length === 0 && <EmptyFilter />}
       </div>
     </section>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Ministry Briefing
+// ---------------------------------------------------------------------------
+
 function MinistryBriefingSection() {
   const { filters } = useFilters();
-  const b = ministryBriefing;
-  const show = filters.ministry === 'All Ministries' || filters.ministry === b.ministry;
+  const key = filters.ministry === 'All Ministries' ? 'Ministry of Finance' : filters.ministry;
+  const b = ministryBriefings[key] ?? ministryBriefing;
 
   return (
     <section id="briefing" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
       <SectionHeader title="Ministry Briefing" subtitle="Daily brief for ministry officers" />
-      {!show ? (
-        <EmptyFilter />
-      ) : (
-        <div className="glass-card overflow-hidden">
+      <ExecutiveDigest section="briefing" />
+      <div className="glass-card overflow-hidden">
           <div className="px-6 py-4 border-b border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-bold text-text-primary">{b.ministry}</h3>
@@ -991,27 +1162,62 @@ function MinistryBriefingSection() {
             </p>
           </div>
         </div>
-      )}
     </section>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Page shell
+// ---------------------------------------------------------------------------
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [articleId, setArticleId] = useState<number | null>(null);
   const [narrativeId, setNarrativeId] = useState<number | null>(null);
+  const [clusterId, setClusterId] = useState<number | null>(null);
+  const [focusArticleId, setFocusArticleId] = useState<number | null>(null);
   const { filters } = useFilters();
+  const { request, clear: clearFocus } = useFocus();
+  const flashRef = useRef<number | null>(null);
 
   useEffect(() => setMounted(true), []);
 
   const openArticle = useCallback((id: number) => {
     setNarrativeId(null);
+    setClusterId(null);
     setArticleId(id);
   }, []);
   const openNarrative = useCallback((id: number) => {
     setArticleId(null);
+    setClusterId(null);
     setNarrativeId(id);
   }, []);
+  const openCluster = useCallback((id: number) => {
+    setArticleId(null);
+    setNarrativeId(null);
+    setClusterId(id);
+  }, []);
+
+  // Focus request from Ask Sentinel citations, PriorityPin, etc.
+  useEffect(() => {
+    if (!request) return;
+    if (request.articleId) {
+      const id = request.articleId;
+      const el = typeof document !== 'undefined' ? document.querySelector(`[data-article-id="${id}"]`) : null;
+      if (el && 'scrollIntoView' in el) {
+        (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setFocusArticleId(id);
+      if (flashRef.current) window.clearTimeout(flashRef.current);
+      flashRef.current = window.setTimeout(() => {
+        openArticle(id);
+        setFocusArticleId(null);
+      }, 700);
+    } else if (request.narrativeId) {
+      openNarrative(request.narrativeId);
+    }
+    clearFocus();
+  }, [request, openArticle, openNarrative, clearFocus]);
 
   const filteredArticles = useMemo(() => articles.filter((a) => {
     if (filters.ministry !== 'All Ministries' && !a.ministryTags.some((t) => t.name === filters.ministry)) return false;
@@ -1030,6 +1236,13 @@ export default function Home() {
     if (filters.ministry !== 'All Ministries' && !p.ministries.includes(filters.ministry)) return false;
     if (filters.region !== 'All Regions' && !p.regions.includes(filters.region)) return false;
     if (filters.media !== 'All Media' && !p.media.includes(filters.media)) return false;
+    return true;
+  }), [filters]);
+
+  const filteredClusters = useMemo(() => storyClusters.filter((c) => {
+    if (filters.ministry !== 'All Ministries' && !c.ministries.includes(filters.ministry)) return false;
+    if (filters.region !== 'All Regions' && !c.regions.includes(filters.region)) return false;
+    if (filters.media !== 'All Media' && !c.media.includes(filters.media)) return false;
     return true;
   }), [filters]);
 
@@ -1057,14 +1270,15 @@ export default function Home() {
 
   const article = articles.find((a) => a.id === articleId) ?? null;
   const narrative = narratives.find((n) => n.id === narrativeId) ?? null;
+  const cluster = storyClusters.find((c) => c.id === clusterId) ?? null;
 
   if (!mounted) return <div className="min-h-screen bg-bg-primary" />;
 
   return (
-    <DetailCtx.Provider value={{ openArticle, openNarrative }}>
+    <DetailCtx.Provider value={{ openArticle, openNarrative, openCluster }}>
       <CommandCenter filteredNarratives={filteredNarratives} />
-      <MediaFeed filteredArticles={filteredArticles} />
-      <NarrativeIntelligence filteredNarratives={filteredNarratives} filteredPercolation={filteredPercolation} />
+      <MediaFeed filteredArticles={filteredArticles} filteredClusters={filteredClusters} focusArticleId={focusArticleId} />
+      <NarrativeIntelligence filteredPercolation={filteredPercolation} filteredClusters={filteredClusters} />
       <RegionalIntelligence filteredRegions={filteredRegions} />
       <EarlyWarningSection filteredAlerts={filteredAlerts} />
       <CrossPlatformSection />
@@ -1085,6 +1299,9 @@ export default function Home() {
       )}
       {narrative && (
         <NarrativeModal narrative={narrative} onClose={() => setNarrativeId(null)} onOpenArticle={openArticle} />
+      )}
+      {cluster && (
+        <StanceCompareModal cluster={cluster} onClose={() => setClusterId(null)} onOpenArticle={openArticle} />
       )}
     </DetailCtx.Provider>
   );

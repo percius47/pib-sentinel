@@ -1,14 +1,15 @@
 'use client';
 
-import { Menu, Sun, Moon } from 'lucide-react';
-import { useFilters, useSidebar, useTheme } from './Providers';
+import { Menu } from 'lucide-react';
+import { useFilters, useSidebar } from './Providers';
 import FilterSelect from './FilterSelect';
+import FilterFab from './FilterFab';
+import ViewControls from './ViewControls';
 import { MINISTRIES, REGIONS, MEDIA } from '@/data/filterOptions';
 
 export default function Header() {
   const { filters, setMinistry, setRegion, setMedia, clear, activeCount } = useFilters();
   const { setMobileOpen } = useSidebar();
-  const { theme, toggle } = useTheme();
 
   return (
     <header className="sticky top-0 z-40 glass px-4 md:px-6 py-3">
@@ -45,17 +46,14 @@ export default function Header() {
           )}
         </div>
 
-        <button
-          onClick={toggle}
-          className="p-2 rounded-lg border border-border-subtle text-text-secondary hover:text-text-primary hover:border-border-strong transition-colors"
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <FilterFab />
+          <ViewControls />
+        </div>
       </div>
 
       {activeCount > 0 && (
-        <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+        <div className="flex items-center gap-2 mt-2.5 flex-wrap lg:hidden">
           {filters.ministry !== 'All Ministries' && (
             <span className="text-[11px] px-2 py-0.5 rounded-full border border-border-strong text-text-secondary">
               {filters.ministry.replace('Ministry of ', '')}

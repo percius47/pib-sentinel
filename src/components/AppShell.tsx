@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import FilterFab from './FilterFab';
+import AskSentinel from './AskSentinel';
 import { useSidebar } from './Providers';
 
 export default function AppShell({ children }: { children: ReactNode }) {
@@ -18,11 +18,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
         }`}
       >
         <Header />
-        <div className="pb-24 lg:pb-0">
+        <div className="pb-28">
           {children}
         </div>
-        <FilterFab />
       </div>
+      <AskSentinel />
     </>
   );
 }

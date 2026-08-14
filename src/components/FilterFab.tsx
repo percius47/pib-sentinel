@@ -29,12 +29,12 @@ export default function FilterFab() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="lg:hidden fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full border border-border-strong bg-bg-card text-text-primary shadow-lg flex items-center justify-center"
+        className="lg:hidden relative inline-flex items-center justify-center h-9 w-9 rounded-md border border-border-subtle bg-bg-card text-text-secondary hover:text-text-primary hover:border-border-strong"
         aria-label="Open filters"
       >
-        <SlidersHorizontal className="w-5 h-5" />
+        <SlidersHorizontal className="w-4 h-4" />
         {activeCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-text-primary text-bg-primary text-[10px] font-semibold flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-sm bg-saffron text-[#1a1208] text-[9px] font-semibold flex items-center justify-center">
             {activeCount}
           </span>
         )}

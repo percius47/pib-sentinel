@@ -2,8 +2,11 @@
 
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import Modal from './Modal';
-import { articles, narrativeDetails, type Narrative } from '@/data/mockData';
+import { articles, computeGenuine, narrativeDetails, type Narrative } from '@/data/mockData';
 import { useTheme } from './Providers';
+import GenuineRing from './GenuineRing';
+import ClickableCard from './ClickableCard';
+import ChartTooltip from './ChartTooltip';
 
 export default function NarrativeModal({
   narrative,
@@ -17,13 +20,6 @@ export default function NarrativeModal({
   const { theme } = useTheme();
   const d = narrativeDetails[narrative.id];
   const tick = theme === 'light' ? '#52525b' : '#a1a1aa';
-  const tooltipStyle = {
-    background: theme === 'light' ? '#ffffff' : '#0f0f0f',
-    border: '1px solid var(--border-subtle)',
-    borderRadius: 8,
-    color: theme === 'light' ? '#09090b' : '#f5f5f5',
-    fontSize: 12,
-  };
 
   if (!d) return null;
 
@@ -93,7 +89,7 @@ export default function NarrativeModal({
             <LineChart data={d.velocitySeries}>
               <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: tick, fontSize: 11 }} />
               <YAxis axisLine={false} tickLine={false} tick={{ fill: tick, fontSize: 11 }} width={32} />
-              <Tooltip contentStyle={tooltipStyle} />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: 'var(--border-strong)', strokeWidth: 1 }} />
               <Line
                 type="monotone"
                 dataKey="mentions"
@@ -122,13 +118,16 @@ export default function NarrativeModal({
             <p className="text-[10px] uppercase tracking-wider text-text-muted mb-2">Source articles</p>
             <div className="space-y-2">
               {sources.map((a) => a && (
-                <button
+                <ClickableCard
                   key={a.id}
-                  onClick={() => onOpenArticle(a.id)}
+                  onActivate={() => onOpenArticle(a.id)}
+                  label={a.headline}
                   className="w-full text-left text-sm p-3 rounded-lg border border-border-subtle hover:border-border-strong hover:bg-bg-card-hover text-text-primary"
+                  contentClassName="flex items-center justify-between gap-3"
                 >
-                  {a.headline}
-                </button>
+                  <span className="min-w-0 truncate">{a.headline}</span>
+                  <GenuineRing data={computeGenuine(a)} size="sm" />
+                </ClickableCard>
               ))}
             </div>
           </div>

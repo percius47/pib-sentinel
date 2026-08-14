@@ -125,6 +125,10 @@ body {
   border-radius: 12px;
   transition: border-color 0.15s ease, background-color 0.15s ease;
   box-shadow: var(--shadow-card);
+  overflow: visible;
+}
+.glass-card:has(.genuine-popover) {
+  z-index: 50;
 }
 .glass-card:hover {
   border-color: var(--border-strong);
@@ -190,3 +194,96 @@ body {
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.priority-pin {
+  animation: priority-glow 3s ease-in-out infinite;
+}
+@keyframes priority-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 24px rgba(245, 158, 11, 0.15); }
+}
+
+.article-focused {
+  animation: focus-flash 1.6s ease-out;
+}
+@keyframes focus-flash {
+  0% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); border-color: var(--border-subtle); }
+  25% { box-shadow: 0 0 24px rgba(245, 158, 11, 0.35); border-color: rgba(245, 158, 11, 0.6); }
+  100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); border-color: var(--border-subtle); }
+}
+
+.ask-cta {
+  position: fixed;
+  right: 1.15rem;
+  bottom: 1.15rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 1rem 0.45rem 0.45rem;
+  background: #c45a12;
+  color: #1a1208;
+  border: 0;
+  border-radius: 2px 18px 18px 2px;
+  box-shadow: 0 10px 28px rgba(196, 90, 18, 0.38);
+  cursor: pointer;
+  text-align: left;
+}
+.ask-cta:hover {
+  background: #d4681c;
+}
+.ask-cta-mark {
+  width: 2.35rem;
+  height: 2.35rem;
+  display: grid;
+  place-items: center;
+  background: #1a1208;
+  color: #f3c39a;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.ask-cta-mark svg {
+  display: block;
+}
+.ask-cta-sweep {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sentinel-sweep 5.5s linear infinite;
+}
+.ask-cta-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+  padding-right: 0.15rem;
+}
+.ask-cta-kicker {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.72;
+}
+.ask-cta-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+:root[data-theme="light"] .ask-cta {
+  background: #b34e0c;
+  color: #fff8f1;
+  box-shadow: 0 10px 24px rgba(179, 78, 12, 0.28);
+}
+:root[data-theme="light"] .ask-cta-mark {
+  background: #fff8f1;
+  color: #b34e0c;
+}
+@keyframes sentinel-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+kbd {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.65rem;
+  line-height: 1;
+}
