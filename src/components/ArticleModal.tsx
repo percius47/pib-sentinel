@@ -1,150 +1,177 @@
 'use client';
 
-import { Clock, Newspaper } from 'lucide-react';
+import { Newspaper, Clock, TrendingUp, Users, Zap, GitBranch, History, ArrowRight, ExternalLink } from 'lucide-react';
+import type { Article } from '@/data/mockData';
 import Modal from './Modal';
-import { articles, type Article } from '@/data/mockData';
 
-function Clipping({ article }: { article: Article }) {
-  return (
-    <div className="aspect-[3/4] rounded-lg border border-border-strong bg-[#f4f1ea] text-[#1a1a1a] p-4 overflow-hidden shadow-inner">
-      <p className="text-[9px] tracking-[0.2em] uppercase text-[#666] border-b border-[#ccc] pb-1 mb-2">
-        {article.source} · {article.edition} · {article.date}
-      </p>
-      <p className="font-serif text-sm font-bold leading-snug mb-2">{article.headline}</p>
-      <div className="columns-2 gap-3 font-serif text-[9px] leading-relaxed text-[#333]">
-        {(article.fullBody || article.summary).split('\n\n').map((p, i) => (
-          <p key={i} className="mb-2">{p}</p>
-        ))}
-      </div>
-      <p className="text-[8px] text-[#888] mt-2">{article.page}</p>
-    </div>
-  );
-}
+const toneColor: Record<string, string> = {
+  Positive: 'text-accent-green',
+  Negative: 'text-accent-red',
+  Critical: 'text-accent-red',
+  Mixed: 'text-accent-amber',
+  Neutral: 'text-text-muted',
+};
 
 export default function ArticleModal({
-  article,
-  onClose,
-  onOpenArticle,
+  article, onClose, onOpenArticle,
 }: {
   article: Article;
   onClose: () => void;
-  onOpenArticle: (id: number) => void;
+  onOpenArticle?: (id: number) => void;
 }) {
-  const related = (article.relatedArticleIds || [])
-    .map((id) => articles.find((a) => a.id === id))
-    .filter(Boolean) as Article[];
+  const sentClass = toneColor[article.sentiment] || 'text-text-muted';
 
   return (
-    <Modal onClose={onClose} labelledBy="article-modal-title">
-      <div className="p-5 md:p-7 clear-both">
-        <div className="flex flex-wrap gap-2 mb-3">
-          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-border-strong text-text-secondary">
-            {article.sentiment}
-          </span>
-          <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border border-border-strong text-text-secondary">
-            Relevance {article.relevanceScore}%
-          </span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
-            {article.mediaType}
-          </span>
+    <Modal
+      open={true}
+      onClose={onClose}
+      title={article.headline}
+      subtitle={`${article.source} • ${article.edition} • ${article.page} • ${article.date}`}
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="md:col-span-1 space-y-3">
+          <div className="aspect-[3/4] rounded-lg bg-[#f4f1ea] border border-border-subtle flex flex-col items-center justify-center p-4">
+            <Newspaper className="w-10 h-10 text-[#666] mb-3" />
+            <p className="text-[10px] text-[#666] text-center font-serif">Clipping preview</p>
+            <p className="text-[10px] text-[#444] text-center mt-2 font-serif line-clamp-5">{article.headline}</p>
+            <p className="text-[9px] text-[#666] text-center mt-2 font-serif">{article.source} • {article.page}</p>
+          </div>
+          <div className="glass-card p-3">
+            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-2">Metadata</p>
+            <dl className="space-y-1.5 text-[11px]">
+              <div className="flex justify-between"><dt className="text-text-muted">Sentiment</dt><dd className={`font-semibold ${sentClass}`}>{article.sentiment}</dd></div>
+              <div className="flex justify-between"><dt className="text-text-muted">Relevance</dt><dd className="font-semibold text-text-primary">{article.relevanceScore}%</dd></div>
+              <div className="flex justify-between"><dt className="text-text-muted">Media</dt><dd className="text-text-secondary">{article.mediaType}</dd></div>
+              <div className="flex justify-between"><dt className="text-text-muted">Region</dt><dd className="text-text-secondary">{article.region}</dd></div>
+              <div className="flex justify-between"><dt className="text-text-muted">Outlets</dt><dd className="text-text-secondary">{article.crossReferences}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-text-muted">Reach</dt><dd className="text-text-secondary text-right">{article.estimatedReach}</dd></div>
+            </dl>
+          </div>
         </div>
 
-        <h2 id="article-modal-title" className="text-lg md:text-xl font-semibold text-text-primary leading-snug mb-4 pr-8">
-          {article.headline}
-        </h2>
-
-        <div className="grid md:grid-cols-[220px_1fr] gap-6">
-          <Clipping article={article} />
+        <div className="md:col-span-2 space-y-4">
           <div>
-            <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
-              {article.fullBody || article.summary}
-            </p>
-            <div className="flex flex-wrap gap-3 text-[11px] text-text-muted mt-4">
-              <span className="flex items-center gap-1"><Newspaper className="w-3 h-3" /> {article.source}</span>
-              <span>{article.edition}</span>
-              <span>{article.page}</span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {article.date}</span>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Full text</h4>
+            <p className="text-sm text-text-secondary leading-relaxed">{article.fullBody}</p>
+          </div>
+
+          <div className="glass-card p-3">
+            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1.5">Analysis</p>
+            <p className="text-xs text-text-secondary leading-relaxed">{article.sentimentReason}</p>
+            {article.aiFlag && (
+              <p className="text-[11px] text-accent-amber mt-2 pt-2 border-t border-border-subtle">
+                ⚡ {article.aiFlag}
+              </p>
+            )}
+          </div>
+
+          {article.ministryTags.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 flex items-center gap-1.5">
+                <Users className="w-3 h-3" /> Ministry tags
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {article.ministryTags.map((t) => (
+                  <span key={t.name} className="text-[11px] px-2 py-1 rounded-lg border border-border-subtle text-text-secondary">
+                    {t.name.replace('Ministry of ', '')} <span className="text-text-muted">{t.confidence}%</span>
+                  </span>
+                ))}
+              </div>
             </div>
-            <p className="text-[11px] text-text-muted mt-2 break-all">{article.sourceUrl}</p>
+          )}
+
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 flex items-center gap-1.5">
+              <TrendingUp className="w-3 h-3" /> Impact
+            </h4>
+            <p className="text-xs text-text-secondary leading-relaxed">{article.impact}</p>
+            {article.audienceSegments.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {article.audienceSegments.map((s) => (
+                  <span key={s} className="text-[10px] px-1.5 py-0.5 rounded border border-border-subtle text-text-muted">{s}</span>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
 
-        <div className="mt-6 p-4 rounded-lg bg-bg-surface border border-border-subtle">
-          <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">Analysis</p>
-          <p className="text-sm text-text-secondary">{article.sentimentReason}</p>
-          {'aiFlag' in article && article.aiFlag ? (
-            <p className="text-xs text-accent-amber mt-2">Filter note: {article.aiFlag}</p>
-          ) : null}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4 mt-4">
-          <div className="p-4 rounded-lg border border-border-subtle">
-            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-2">Impact</p>
-            <p className="text-xs text-text-secondary mb-2">Reach: {article.estimatedReach}</p>
-            <div className="flex flex-wrap gap-1.5 mb-2">
-              {article.ministryTags.map((t) => (
-                <span key={t.name} className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-secondary">
-                  {t.name.replace('Ministry of ', '')} {t.confidence}%
-                </span>
-              ))}
+          {article.spreadTimeline.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 flex items-center gap-1.5">
+                <GitBranch className="w-3 h-3" /> Spread timeline
+              </h4>
+              <div className="relative pl-5">
+                {article.spreadTimeline.map((t, i) => (
+                  <div key={i} className="relative pb-2.5 last:pb-0">
+                    <div className="absolute left-[-15px] top-1 w-2 h-2 rounded-full bg-text-secondary" />
+                    {i < article.spreadTimeline.length - 1 && (
+                      <div className="absolute left-[-11px] top-3 bottom-0 w-px bg-border-subtle" />
+                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[11px] text-text-muted font-mono w-14 shrink-0">{t.day}</span>
+                      <span className="text-xs text-text-primary">{t.outlet}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-border-subtle text-text-muted">{t.type}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="text-[11px] text-text-muted">
-              {(article.audience || []).join(' · ')}
-            </p>
-          </div>
-          <div className="p-4 rounded-lg border border-border-subtle">
-            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-2">Spread</p>
-            <div className="space-y-2">
-              {(article.spreadTimeline || []).length === 0 && (
-                <p className="text-xs text-text-muted">No cross-outlet spread.</p>
-              )}
-              {(article.spreadTimeline || []).map((t, i) => (
-                <div key={i} className="flex gap-3 text-xs">
-                  <span className="font-mono text-text-muted w-16 shrink-0">{t.day}</span>
-                  <span className="text-text-primary">{t.outlet}</span>
-                  <span className="text-text-muted">{t.type}</span>
-                </div>
-              ))}
+          )}
+
+          {article.relatedArticles.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 flex items-center gap-1.5">
+                <ExternalLink className="w-3 h-3" /> Related coverage
+              </h4>
+              <ul className="space-y-1.5">
+                {article.relatedArticles.map((r, i) => {
+                  const clickable = typeof r.id === 'number' && onOpenArticle;
+                  return (
+                    <li key={i}>
+                      <button
+                        type="button"
+                        disabled={!clickable}
+                        onClick={() => clickable && onOpenArticle!(r.id!)}
+                        className={`w-full text-left text-xs flex items-start gap-2 p-2 rounded-lg border border-border-subtle
+                          ${clickable ? 'hover:border-border-strong hover:bg-bg-card-hover' : 'opacity-90 cursor-default'}`}
+                      >
+                        <ArrowRight className="w-3 h-3 text-text-muted mt-0.5 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-text-primary leading-snug">{r.headline}</p>
+                          <p className="text-[10px] text-text-muted mt-0.5">
+                            {r.source} <span className={`ml-2 ${toneColor[r.tone] || 'text-text-muted'}`}>• {r.tone}</span>
+                          </p>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-          </div>
-        </div>
+          )}
 
-        {related.length > 0 && (
-          <div className="mt-4">
-            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-2">Related coverage</p>
-            <div className="space-y-2">
-              {related.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => onOpenArticle(r.id)}
-                  className="w-full text-left text-sm p-3 rounded-lg border border-border-subtle hover:border-border-strong hover:bg-bg-card-hover text-text-primary"
-                >
-                  {r.headline}
-                </button>
-              ))}
-            </div>
+          <div className="glass-card p-3">
+            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-text-muted mb-1.5 flex items-center gap-1.5">
+              <History className="w-3 h-3" /> Historical context
+            </h4>
+            <p className="text-xs text-text-secondary leading-relaxed">{article.historicalContext}</p>
           </div>
-        )}
 
-        {article.historicalContext && (
-          <div className="mt-4 p-4 rounded-lg border border-border-subtle">
-            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">Historical context</p>
-            <p className="text-xs text-text-secondary">{article.historicalContext}</p>
-          </div>
-        )}
-
-        {(article.detailedActions || []).length > 0 && (
-          <div className="mt-4">
-            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-2">Recommended actions</p>
+          <div className="rounded-lg border border-border-strong p-3">
+            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-text-primary mb-2 flex items-center gap-1.5">
+              <Zap className="w-3 h-3" /> Recommended actions
+            </h4>
             <ul className="space-y-1.5">
               {article.detailedActions.map((a, i) => (
-                <li key={i} className="text-sm text-text-secondary pl-3 border-l-2 border-border-strong">
-                  {a}
+                <li key={i} className="text-xs text-text-secondary flex gap-2">
+                  <span className="text-text-muted">{i + 1}.</span>
+                  <span className="flex-1">{a}</span>
                 </li>
               ))}
             </ul>
           </div>
-        )}
+
+          <p className="text-[10px] text-text-muted flex items-center gap-1"><Clock className="w-3 h-3" /> {article.date}</p>
+        </div>
       </div>
     </Modal>
   );
