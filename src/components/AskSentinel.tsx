@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X, Send } from 'lucide-react';
+import { X, Send, MessageCircle } from 'lucide-react';
 import { askSentinelSuggestions, matchAskResponse, articles } from '@/data/mockData';
 import { useAskSentinel, useFocus } from './Providers';
 import SentinelMark from './SentinelMark';
@@ -132,13 +132,8 @@ export default function AskSentinel() {
         aria-label="Ask Sentinel"
         className={`ask-cta ${open ? 'hidden' : ''}`}
       >
-        <span className="ask-cta-mark">
-          <SentinelMark className="w-5 h-5" sweep />
-        </span>
-        <span className="ask-cta-copy">
-          <span className="ask-cta-kicker">Duty desk</span>
-          <span className="ask-cta-title">Ask Sentinel</span>
-        </span>
+        <MessageCircle className="w-4 h-4" strokeWidth={2.25} />
+        Ask Sentinel
       </button>
 
       {open && (
