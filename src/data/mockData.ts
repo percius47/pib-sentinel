@@ -469,6 +469,11 @@ const seedArticles = [
   clip({ id: 43, headline: 'Reddit AMA on PLFS vs CMIE — high comment volume, critical tone', summary: 'Social listening sample for Labour/Statistics. Not a news report; still a spread signal.', source: 'Reddit', ministry: 'Ministry of Labour', region: 'South India', mediaType: 'Social Media', sentiment: 'Negative', relevanceScore: 74 }),
   clip({ id: 44, headline: 'Kohima: Digital India village demo covered by Nagaland Post', summary: 'Second Northeast print item for MeitY so the region filter is not a single card.', source: 'Nagaland Post', ministry: 'Ministry of Electronics & IT', region: 'Northeast', mediaType: 'Print', sentiment: 'Positive' }),
   clip({ id: 45, headline: 'Haryana Kisan Club Facebook group on MSP wheat bonus rumour', summary: 'Agriculture social; needs verification before brief. Punjab & Haryana quota.', source: 'Facebook', ministry: 'Ministry of Agriculture', region: 'Punjab & Haryana', mediaType: 'Social Media', sentiment: 'Mixed', relevanceScore: 70 }),
+  clip({ id: 46, headline: 'DD News special: Gati Shakti 2.0 corridor maps and job numbers', summary: 'Primetime package with DPIIT graphics. Same Cabinet story as the TOI lead, television desk.', source: 'DD News', ministry: 'Ministry of Finance', ministry2: 'Ministry of Railways', region: 'Hindi Belt', mediaType: 'Television', sentiment: 'Positive', relevanceScore: 96 }),
+  clip({ id: 47, headline: 'X thread: Gati Shakti 2.0 explained in 12 slides — 2.1M views overnight', summary: 'Infrastructure explainers circulating in Hindi and English. Social pickup of the Cabinet announcement, not a new claim.', source: 'X (Twitter)', ministry: 'Ministry of Finance', ministry2: 'Ministry of Commerce', region: 'Hindi Belt', mediaType: 'Social Media', sentiment: 'Positive', relevanceScore: 93 }),
+  clip({ id: 48, headline: 'ThePrint: matching-grant scepticism on Gati Shakti 2.0 state share', summary: 'Digital analysis of whether states will draw the matching grant. Completes print/TV/social with a digital-native read.', source: 'ThePrint', ministry: 'Ministry of Finance', region: 'Hindi Belt', mediaType: 'Digital', sentiment: 'Mixed', relevanceScore: 91 }),
+  clip({ id: 49, headline: 'NDTV panel: PLFS methodology — economists vs MoSPI talking points', summary: 'Studio debate on the 3.2 pp gig-worker classification. Television sibling of the Mint print story.', source: 'NDTV', ministry: 'Ministry of Labour', ministry2: 'Ministry of Statistics', region: 'Hindi Belt', mediaType: 'Television', sentiment: 'Negative', relevanceScore: 92 }),
+  clip({ id: 50, headline: 'Instagram reel: “3.2% jobs gap” infographic circulating in campus accounts', summary: 'Short-form visual of the Mint critique. Social amplification, not original reporting.', source: 'Instagram', ministry: 'Ministry of Labour', region: 'South India', mediaType: 'Social Media', sentiment: 'Negative', relevanceScore: 85 }),
 ];
 
 export const articles = [...coreArticles, ...seedArticles, ...buildCoverageArticles([...coreArticles, ...seedArticles])];
@@ -1182,6 +1187,39 @@ export interface GenuineData {
   note: string;
 }
 
+export type GenuineQuadrant =
+  | 'genuine-organic'
+  | 'genuine-manufactured'
+  | 'fabricated-organic'
+  | 'fabricated-manufactured';
+
+const QUADRANT_ACTION: Record<GenuineQuadrant, string> = {
+  'genuine-organic': 'A real grievance genuinely resonating — engage substantively, don\'t debunk.',
+  'genuine-manufactured': 'True content, weaponised by coordinated amplification — respond to the content, flag the manipulation.',
+  'fabricated-organic': 'Real people innocently sharing something false — fast, clear correction, no accusation.',
+  'fabricated-manufactured': 'Coordinated disinformation — the strongest case for full evidence-package referral.',
+};
+
+export function genuineAxes(d: GenuineData): {
+  content: number;
+  spread: number;
+  quadrant: GenuineQuadrant;
+  action: string;
+} {
+  const content = d.factors.deepfakeLikelihood != null
+    ? Math.round(d.score * 0.55 + (100 - d.factors.deepfakeLikelihood) * 0.45)
+    : d.score;
+  const spread = Math.min(100, Math.max(0, Math.round(
+    (100 - d.factors.corroboration) * 0.75 + (d.factors.deepfakeLikelihood ?? 0) * 0.25,
+  )));
+  const genuine = content >= 50;
+  const manufactured = spread >= 50;
+  const quadrant: GenuineQuadrant = genuine
+    ? (manufactured ? 'genuine-manufactured' : 'genuine-organic')
+    : (manufactured ? 'fabricated-manufactured' : 'fabricated-organic');
+  return { content, spread, quadrant, action: QUADRANT_ACTION[quadrant] };
+}
+
 // Per-outlet base credibility used as the source-cred factor for Genuine.
 export const outletCredibility: Record<string, number> = {
   'Times of India': 88,
@@ -1375,21 +1413,21 @@ export const storyClusters: StoryCluster[] = [
     id: 1,
     event: 'Gati Shakti 2.0 Cabinet approval',
     headline: 'Cabinet approves Rs 2.5 lakh crore Gati Shakti 2.0 — 14 outlets, mostly positive',
-    articleIds: [1, 9, 10, 31],
+    articleIds: [1, 9, 10, 31, 46, 47, 48],
     outlets: 14,
     toneSplit: { positive: 11, neutral: 2, mixed: 1, negative: 0 },
     genuineScore: 90,
     outletsSummary: ['Times of India', 'The Hindu', 'Mint', 'Dainik Jagran', 'CNBC-TV18', 'DD News', 'Business Standard'],
     ministries: ['Ministry of Finance', 'Ministry of Commerce', 'Ministry of Railways'],
     regions: ['Hindi Belt', 'Maharashtra & Gujarat', 'South India'],
-    media: ['Print', 'Television'],
+    media: ['Print', 'Television', 'Digital', 'Social Media'],
     note: 'National saturation with mostly factual/amplifying stances. DD News matching-grant angle is the one sceptical read.',
   },
   {
     id: 2,
     event: 'PLFS methodology / unemployment critique',
     headline: 'Unemployment methodology critique — 11 outlets, sceptical to critical',
-    articleIds: [2, 6, 26, 27, 29, 43],
+    articleIds: [2, 6, 26, 27, 29, 43, 49, 50],
     outlets: 11,
     toneSplit: { positive: 1, neutral: 1, mixed: 3, negative: 6 },
     genuineScore: 66,

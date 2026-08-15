@@ -75,10 +75,10 @@ export default function Sidebar() {
             <PibLogo className="w-9 h-9 shrink-0" />
             <div className="overflow-hidden">
               <h1 className="text-sm font-bold tracking-wider text-text-primary whitespace-nowrap">
-                PIB SENTINEL
+                PRAHARI
               </h1>
               <p className="text-[10px] tracking-[0.15em] text-text-muted uppercase whitespace-nowrap">
-                Media Intelligence
+                Narrative Command
               </p>
             </div>
           </div>

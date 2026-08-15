@@ -10,6 +10,8 @@ import {
   type StoryCluster,
   type OutletStance,
 } from '@/data/mockData';
+import { StoryTreeStrip } from './PrahariAddons';
+import { ArticleChatButton } from './ArticleChat';
 
 const STANCE_COLOR: Record<OutletStance, string> = {
   Factual: 'text-text-secondary border-border-strong',
@@ -55,6 +57,9 @@ export default function StanceCompareModal({
         <p className="text-xs text-text-secondary mb-5">
           {cluster.event} · {cluster.outlets} outlets · Genuine {cluster.genuineScore}. {cluster.note}
         </p>
+        <div className="mb-5">
+          <StoryTreeStrip cluster={cluster} />
+        </div>
 
         <div className="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x">
           {items.map((a) => {
@@ -80,15 +85,18 @@ export default function StanceCompareModal({
                 <p className="text-xs text-text-secondary leading-relaxed line-clamp-5 mb-3">
                   {a.summary}
                 </p>
-                <div className="mt-auto flex items-center justify-between">
+                <div className="mt-auto flex items-center justify-between gap-2">
                   <GenuineRing data={genuine} size="sm" />
-                  <button
-                    type="button"
-                    onClick={() => onOpenArticle(a.id)}
-                    className="text-[11px] text-text-primary inline-flex items-center gap-1 hover:underline"
-                  >
-                    Open article <ArrowRight className="w-3 h-3" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <ArticleChatButton articleId={a.id} />
+                    <button
+                      type="button"
+                      onClick={() => onOpenArticle(a.id)}
+                      className="text-[11px] text-text-primary inline-flex items-center gap-1 hover:underline"
+                    >
+                      Open article <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

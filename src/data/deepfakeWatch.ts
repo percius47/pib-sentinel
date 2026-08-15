@@ -18,6 +18,8 @@ export interface DeepfakeCase {
   finding: string;
   action: string;
   scan: number[];
+  realTitle: string;
+  realDate: string;
 }
 
 export const deepfakeCases: DeepfakeCase[] = [
@@ -38,6 +40,8 @@ export const deepfakeCases: DeepfakeCase[] = [
     finding: 'Same frames as a 2023 relief pool feed. Caption dates the clip as 12 Aug 2026. No C2PA credential. Share graph is organic after the first 40 minutes.',
     action: 'Issue image-comparison Fact Check; Kerala PIB office to seed vernacular correction.',
     scan: [12, 18, 14, 40, 88, 91, 70, 22, 16, 19, 15, 13],
+    realTitle: 'PIB pool relief B-roll (credentialed 2023)',
+    realDate: 'Jul 2023 · C2PA signed',
   },
   {
     id: 'df-faceswap',
@@ -56,6 +60,8 @@ export const deepfakeCases: DeepfakeCase[] = [
     finding: 'Inner-face swap on a 2019 podium shot. Audio bed is a separate 2024 rally. Model watermark in two I-frames. Not a PIB-issued asset.',
     action: 'Priority Fact Check with side-by-side frames. Do not amplify by quoting the fake line.',
     scan: [8, 11, 9, 72, 94, 96, 90, 44, 12, 10, 8, 7],
+    realTitle: '2019 podium pool still — unaltered',
+    realDate: '2019 · PIB archive',
   },
   {
     id: 'df-audio',
@@ -74,6 +80,8 @@ export const deepfakeCases: DeepfakeCase[] = [
     finding: 'Timbre matches a July briefing; phoneme timing does not. No content credential. First hop is a new channel created 11 Aug.',
     action: 'Publish 20-second official clip with credential. Ask platforms to label the clone.',
     scan: [30, 28, 55, 80, 86, 40, 22, 70, 88, 33, 29, 31],
+    realTitle: 'July GST presser — PIB-issued audio',
+    realDate: 'Jul 2026 · credentialed',
   },
   {
     id: 'df-poster',
@@ -92,6 +100,8 @@ export const deepfakeCases: DeepfakeCase[] = [
     finding: 'Six-finger hands on a “engineer” extra, warped Devanagari, invented tower geometry. Coverage of real hill-district gaps exists — this graphic is not it.',
     action: 'Correct the graphic; keep the genuine connectivity-gap story on the briefing.',
     scan: [20, 24, 22, 60, 85, 82, 25, 21, 19, 48, 80, 22],
+    realTitle: 'MeitY hill-connectivity still (no shutdown)',
+    realDate: 'PIB Digital India kit',
   },
   {
     id: 'df-reel',
@@ -110,6 +120,8 @@ export const deepfakeCases: DeepfakeCase[] = [
     finding: 'Nashik reel is genuine farmer speech; B-roll stills are a 2024 Rajasthan demo. Mixed authenticity — voice organic, pictures borrowed.',
     action: 'Ask the creator to swap stills; no full takedown. Brief Agriculture desk.',
     scan: [40, 42, 38, 35, 70, 74, 36, 34, 41, 39, 37, 40],
+    realTitle: 'Nashik farmer speech (voice is genuine)',
+    realDate: 'Aug 2026 · no stills credential',
   },
   {
     id: 'df-pib',
@@ -128,5 +140,7 @@ export const deepfakeCases: DeepfakeCase[] = [
     finding: 'Included as a clean control. Credential verifies. Use as the reference package when rebutting clones.',
     action: 'No action — keep in the evidence locker as the genuine comparator.',
     scan: [90, 92, 91, 93, 94, 95, 93, 92, 91, 94, 93, 92],
+    realTitle: 'This package is the provably real version',
+    realDate: 'Aug 12, 2026 · C2PA PIB pool',
   },
 ];

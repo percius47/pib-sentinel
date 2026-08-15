@@ -12,6 +12,7 @@ export const WORKSPACE_VIEWS = [
   'penetration',
   'graph',
   'deepfake',
+  'mitra',
 ] as const;
 export type WorkspaceView = (typeof WORKSPACE_VIEWS)[number];
 
@@ -43,6 +44,7 @@ export const workspaceTabs: Partial<Record<WorkspaceId, { id: WorkspaceView; lab
   watch: [
     { id: 'alerts', label: 'Alerts' },
     { id: 'misinfo', label: 'Misinfo' },
+    { id: 'mitra', label: 'Mitra' },
   ],
   coverage: [
     { id: 'stories', label: 'Stories' },

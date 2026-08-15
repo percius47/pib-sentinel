@@ -28,12 +28,18 @@ import ArticleModal from '@/components/ArticleModal';
 import NarrativeModal from '@/components/NarrativeModal';
 import StanceCompareModal from '@/components/StanceCompareModal';
 import ExecutiveDigest from '@/components/ExecutiveDigest';
+import {
+  TrustStrip, HistorySnippet, ImmuneBlock, RadarPitch, MitraQueue,
+  HandoverBlock, RehearsalBlock, PreMortemBlock,
+} from '@/components/PrahariAddons';
 import PriorityPin from '@/components/PriorityPin';
 import GenuineRing from '@/components/GenuineRing';
 import MetricChip from '@/components/MetricChip';
 import StoryClusterCard from '@/components/StoryClusterCard';
 import SnoozeButton from '@/components/SnoozeButton';
 import ClickableCard from '@/components/ClickableCard';
+import { ArticleChatButton } from '@/components/ArticleChat';
+import MediaThumb from '@/components/MediaThumb';
 import ChartTooltip from '@/components/ChartTooltip';
 
 // ---------------------------------------------------------------------------
@@ -275,6 +281,7 @@ function CommandCenter({
   return (
     <section id="desk" className="px-4 md:px-8 py-6 md:py-8">
       <SectionHeader title="Dashboard" />
+      <TrustStrip />
       <ExecutiveDigest section="command-center" />
       <ThreatLevelBanner />
 
@@ -415,6 +422,8 @@ function ArticleCard({ article, focused }: { article: Article; focused?: boolean
                   <Layers className="w-2.5 h-2.5" /> Cluster
                 </button>
               ) : null}
+              <MetricChip value={article.mediaType} tone="muted" />
+              <ArticleChatButton articleId={article.id} />
             </div>
           </div>
         </div>
@@ -441,11 +450,9 @@ function ComfortableArticleCard({ article, genuine }: { article: Article; genuin
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-border-subtle text-text-secondary">
             RELEVANCE: {article.relevanceScore}%
           </span>
-          {article.mediaType !== 'Print' && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
-              {article.mediaType}
-            </span>
-          )}
+          <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
+            {article.mediaType}
+          </span>
           {article.crossReferences > 3 && (
             <span className="text-[10px] px-2 py-0.5 rounded-full border border-border-subtle text-text-muted">
               {article.crossReferences} outlets
@@ -455,7 +462,10 @@ function ComfortableArticleCard({ article, genuine }: { article: Article; genuin
         <h4 className="text-sm font-semibold text-text-primary leading-snug mb-1.5">{article.headline}</h4>
         <p className="text-xs text-text-secondary leading-relaxed mb-3">{article.summary}</p>
         <div className="flex items-center gap-4 text-[11px] text-text-muted mb-2.5 flex-wrap">
-          <span className="flex items-center gap-1"><Newspaper className="w-3 h-3" /> {article.source}</span>
+          <span className="flex items-center gap-1">
+            {article.mediaType === 'Television' ? <Tv className="w-3 h-3" /> : article.mediaType === 'Social Media' ? <Smartphone className="w-3 h-3" /> : article.mediaType === 'Digital' ? <Globe className="w-3 h-3" /> : <Newspaper className="w-3 h-3" />}
+            {article.source}
+          </span>
           <span>{article.edition}</span>
           <span>{article.page}</span>
           <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {article.date}</span>
@@ -471,6 +481,9 @@ function ComfortableArticleCard({ article, genuine }: { article: Article; genuin
           <span className="font-semibold text-text-secondary">Analysis: </span>
           <span className="text-text-secondary">{article.sentimentReason}</span>
         </div>
+        <div className="mt-2.5">
+          <ArticleChatButton articleId={article.id} />
+        </div>
         {'aiFlag' in article && article.aiFlag ? (
           <div className="mt-2 text-[11px] px-3 py-2 rounded-lg border border-accent-amber/30 bg-accent-amber/8">
             <span className="font-semibold text-accent-amber">Filter note: </span>
@@ -480,12 +493,50 @@ function ComfortableArticleCard({ article, genuine }: { article: Article; genuin
       </div>
       <div className="flex flex-col items-center gap-2 shrink-0">
         <GenuineRing data={genuine} size="md" />
-        <div className="w-24 h-32 sm:w-28 sm:h-36 rounded-lg bg-[#f4f1ea] border border-border-subtle flex items-center justify-center overflow-hidden">
-          <div className="p-2 text-center">
-            <Newspaper className="w-5 h-5 text-[#666] mx-auto mb-1" />
-            <p className="text-[8px] text-[#444] font-serif leading-tight line-clamp-4">{article.headline}</p>
-          </div>
-        </div>
+        <MediaThumb article={article} compact />
+      </div>
+    </div>
+  );
+}
+
+function FeedSegment({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted mb-1.5">{label}</p>
+      <div
+        role="radiogroup"
+        aria-label={label}
+        className="flex rounded-md border border-border-subtle bg-bg-surface p-[3px]"
+      >
+        {options.map((opt) => {
+          const on = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => onChange(opt)}
+              className={`flex-1 min-w-0 px-1.5 py-1.5 text-[11px] leading-none font-medium rounded-[4px] transition-colors ${
+                on
+                  ? 'bg-bg-card-hover text-text-primary'
+                  : 'text-text-muted hover:text-text-secondary'
+              }`}
+            >
+              <span className="block truncate">{opt}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -508,13 +559,18 @@ function MediaFeed({
 }) {
   const { openCluster } = useDetail();
   const [selectedSentiment, setSelectedSentiment] = useState('All');
+  const [sourceType, setSourceType] = useState('All');
   const [minRelevance, setMinRelevance] = useState(0);
 
-  const filtered = filteredArticles.filter((a) => {
-    if (selectedSentiment !== 'All' && a.sentiment !== selectedSentiment) return false;
-    if (a.relevanceScore < minRelevance) return false;
-    return true;
-  });
+  const filtered = filteredArticles
+    .filter((a) => {
+      if (selectedSentiment !== 'All' && a.sentiment !== selectedSentiment) return false;
+      if (sourceType !== 'All' && a.mediaType !== sourceType) return false;
+      if (a.relevanceScore < minRelevance) return false;
+      return true;
+    })
+    .slice()
+    .sort((a, b) => b.relevanceScore - a.relevanceScore || a.id - b.id);
 
   return (
     <div>
@@ -542,35 +598,39 @@ function MediaFeed({
 
       {pane === 'feed' && (
         <>
-          <div className="glass-card p-3 mb-4 flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-text-muted" />
-              <span className="text-[11px] text-text-muted uppercase tracking-wider">Sentiment</span>
+          <div className="glass-card mb-4 overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle">
+              <Filter className="w-3.5 h-3.5 text-text-muted" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-text-secondary">Narrow feed</span>
             </div>
-            {['All', 'Positive', 'Negative', 'Mixed', 'Neutral'].map((s) => (
-              <button
-                key={s}
-                onClick={() => setSelectedSentiment(s)}
-                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                  selectedSentiment === s
-                    ? 'border-border-strong text-text-primary bg-bg-card-hover'
-                    : 'text-text-secondary border-border-subtle hover:border-border-strong'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-            <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto">
-              <span className="text-xs text-text-muted">Min relevance</span>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={minRelevance}
-                onChange={(e) => setMinRelevance(Number(e.target.value))}
-                className="w-24"
+            <div className="p-4 grid gap-4">
+              <FeedSegment
+                label="Sentiment"
+                options={['All', 'Positive', 'Negative', 'Mixed', 'Neutral']}
+                value={selectedSentiment}
+                onChange={setSelectedSentiment}
               />
-              <span className="text-xs font-mono w-8">{minRelevance}%</span>
+              <FeedSegment
+                label="Source"
+                options={['All', 'Print', 'Television', 'Digital', 'Social Media']}
+                value={sourceType}
+                onChange={setSourceType}
+              />
+              <div>
+                <div className="flex items-baseline justify-between gap-3 mb-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Min relevance</p>
+                  <span className="text-xs font-mono tabular-nums text-text-primary">{minRelevance}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={minRelevance}
+                  onChange={(e) => setMinRelevance(Number(e.target.value))}
+                  className="w-full h-1.5 accent-accent-blue cursor-pointer"
+                  aria-label="Minimum relevance"
+                />
+              </div>
             </div>
           </div>
 
@@ -711,6 +771,8 @@ function RegionalIntelligence({ filteredRegions }: { filteredRegions: typeof reg
               );
             })}
           </div>
+
+          <HistorySnippet />
 
           <div className="glass-card p-4 overflow-x-auto">
             <h4 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wider">Regional Sentiment Overview</h4>
@@ -1001,6 +1063,7 @@ function MessagePenetrationSection({ filtered }: { filtered: typeof messagePenet
                 </div>
               </div>
             )}
+            <RadarPitch message={mp.message} />
           </div>
         ))}
         {filtered.length === 0 && <EmptyFilter />}
@@ -1076,6 +1139,7 @@ function MisinfoWatchSection({ filtered }: { filtered: typeof misinfoItems }) {
                     <p className="text-[10px] font-semibold uppercase tracking-wider mb-1">Recommended Action</p>
                     <p className="text-xs text-text-secondary">{item.action}</p>
                   </div>
+                  <ImmuneBlock misinfoId={item.id} />
                 </div>
               </div>
             </div>
@@ -1126,6 +1190,12 @@ function MinistryBriefingSection() {
                 <p className="text-sm font-semibold text-text-primary">{b.coverageVolume.toLocaleString()} items</p>
               </div>
             </div>
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider mb-2.5">Handover dossier</h4>
+              <HandoverBlock />
+            </div>
+            <RehearsalBlock />
+            <PreMortemBlock />
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                 <BarChart3 className="w-3.5 h-3.5" /> Key Highlights
@@ -1181,7 +1251,7 @@ function MinistryBriefingSection() {
           </div>
           <div className="px-6 py-3 border-t border-border-subtle flex items-center justify-between">
             <p className="text-[9px] text-text-muted uppercase tracking-wider">
-              PIB Sentinel • Confidence: {kpiData.aiConfidence}%
+              PIB Prahari • Confidence: {kpiData.aiConfidence}%
             </p>
             <p className="text-[9px] text-text-muted uppercase tracking-wider">
               Restricted • Government of India
@@ -1343,7 +1413,9 @@ export default function Home() {
   } else if (workspace === 'watch') {
     body = view === 'misinfo'
       ? <MisinfoWatchSection filtered={filteredMisinfo} />
-      : <EarlyWarningSection filteredAlerts={filteredAlerts} />;
+      : view === 'mitra'
+        ? <MitraQueue />
+        : <EarlyWarningSection filteredAlerts={filteredAlerts} />;
   } else if (workspace === 'coverage') {
     if (view === 'platform') body = <CrossPlatformSection />;
     else {
@@ -1375,7 +1447,7 @@ export default function Home() {
         <p className="text-xs text-text-muted uppercase tracking-widest">
           Confidential & Restricted • Press Information Bureau • Government of India
         </p>
-        <p className="text-[10px] text-text-muted mt-1">PIB Sentinel v1.0</p>
+        <p className="text-[10px] text-text-muted mt-1">Prahari v2.0</p>
       </footer>
 
       {article && (

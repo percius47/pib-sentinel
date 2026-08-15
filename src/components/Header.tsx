@@ -15,10 +15,10 @@ function BrandBlock({ compact }: { compact?: boolean }) {
   return (
     <div className="min-w-0">
       <h1 className={`font-semibold text-text-primary truncate ${compact ? 'text-sm' : 'text-sm md:text-base'}`}>
-        PIB Sentinel
+        PIB Prahari
       </h1>
       <p className="text-[10px] md:text-xs text-text-muted truncate">
-        Sentinel / {workspaceMeta[workspace].title}
+        Prahari / {workspaceMeta[workspace].title}
         {crumb ? ` / ${crumb}` : ''}
       </p>
     </div>
@@ -74,7 +74,7 @@ export default function Header() {
             type="button"
             onClick={() => openPanel()}
             className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md border border-border-subtle bg-bg-card text-text-secondary hover:text-text-primary hover:border-border-strong"
-            aria-label="Ask Sentinel"
+            aria-label="Ask Prahari"
           >
             <MessageCircle className="w-4 h-4" />
           </button>

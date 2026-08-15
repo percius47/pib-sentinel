@@ -7,6 +7,7 @@ import { useTheme } from './Providers';
 import GenuineRing from './GenuineRing';
 import ClickableCard from './ClickableCard';
 import ChartTooltip from './ChartTooltip';
+import { correlationFor } from '@/data/prahariAddons';
 
 export default function NarrativeModal({
   narrative,
@@ -20,6 +21,7 @@ export default function NarrativeModal({
   const { theme } = useTheme();
   const d = narrativeDetails[narrative.id];
   const tick = theme === 'light' ? '#52525b' : '#a1a1aa';
+  const corr = correlationFor(narrative.id);
 
   if (!d) return null;
 
@@ -99,6 +101,14 @@ export default function NarrativeModal({
               />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+
+        <div className="p-4 rounded-lg border border-border-subtle mb-4">
+          <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">Correlation engine</p>
+          <p className="text-xs font-semibold text-text-primary mb-1">{corr.verdict}</p>
+          <p className="text-[11px] text-text-secondary">{corr.courts}</p>
+          <p className="text-[11px] text-text-secondary mt-1">{corr.elections}</p>
+          <p className="text-[11px] text-text-secondary mt-1">{corr.states}</p>
         </div>
 
         <div className="p-4 rounded-lg border border-border-subtle mb-4">

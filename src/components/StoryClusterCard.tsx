@@ -4,6 +4,7 @@ import { ArrowRight, Layers } from 'lucide-react';
 import type { StoryCluster } from '@/data/mockData';
 import GenuineRing from './GenuineRing';
 import ClickableCard from './ClickableCard';
+import { StoryTreeStrip } from './PrahariAddons';
 
 function ToneBar({ split }: { split: StoryCluster['toneSplit'] }) {
   const total = split.positive + split.neutral + split.mixed + split.negative || 1;
@@ -58,6 +59,7 @@ export default function StoryClusterCard({
       </div>
 
       <ToneBar split={cluster.toneSplit} />
+      <StoryTreeStrip cluster={cluster} />
 
       <div className="flex items-center gap-2 text-[11px] text-text-muted flex-wrap">
         <span className="text-text-secondary font-semibold">{cluster.outlets}</span>

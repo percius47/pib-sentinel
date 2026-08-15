@@ -4,22 +4,11 @@ import { Clock, Newspaper } from 'lucide-react';
 import Modal from './Modal';
 import { articles, computeGenuine, articleCluster, type Article } from '@/data/mockData';
 import GenuineRing from './GenuineRing';
+import { ArticleChatButton } from './ArticleChat';
+import MediaThumb from './MediaThumb';
 
 function Clipping({ article }: { article: Article }) {
-  return (
-    <div className="aspect-[3/4] rounded-lg border border-border-strong bg-[#f4f1ea] text-[#1a1a1a] p-4 overflow-hidden shadow-inner">
-      <p className="text-[9px] tracking-[0.2em] uppercase text-[#666] border-b border-[#ccc] pb-1 mb-2">
-        {article.source} · {article.edition} · {article.date}
-      </p>
-      <p className="font-serif text-sm font-bold leading-snug mb-2">{article.headline}</p>
-      <div className="columns-2 gap-3 font-serif text-[9px] leading-relaxed text-[#333]">
-        {(article.fullBody || article.summary).split('\n\n').map((p, i) => (
-          <p key={i} className="mb-2">{p}</p>
-        ))}
-      </div>
-      <p className="text-[8px] text-[#888] mt-2">{article.page}</p>
-    </div>
-  );
+  return <MediaThumb article={article} />;
 }
 
 export default function ArticleModal({
@@ -58,9 +47,12 @@ export default function ArticleModal({
           <GenuineRing data={genuine} size="lg" label />
         </div>
 
-        <h2 id="article-modal-title" className="text-lg md:text-xl font-semibold text-text-primary leading-snug mb-4 pr-8">
+        <h2 id="article-modal-title" className="text-lg md:text-xl font-semibold text-text-primary leading-snug mb-3 pr-8">
           {article.headline}
         </h2>
+        <div className="mb-4">
+          <ArticleChatButton articleId={article.id} />
+        </div>
 
         <div className="grid md:grid-cols-[220px_1fr] gap-6">
           <Clipping article={article} />

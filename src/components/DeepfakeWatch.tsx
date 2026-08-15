@@ -177,6 +177,19 @@ function ForensicsPane({
         </div>
 
         <p className="text-xs text-text-secondary leading-relaxed">{item.finding}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg border border-accent-red/30 p-2.5">
+            <p className="text-[9px] uppercase tracking-wider text-accent-red mb-1">Flagged</p>
+            <p className="text-[11px] text-text-primary leading-snug">{item.title}</p>
+            <p className="text-[10px] text-text-muted mt-1">{item.viralDate}</p>
+          </div>
+          <div className="rounded-lg border border-accent-green/30 p-2.5">
+            <p className="text-[9px] uppercase tracking-wider text-accent-green mb-1">Provably real</p>
+            <p className="text-[11px] text-text-primary leading-snug">{item.realTitle}</p>
+            <p className="text-[10px] text-text-muted mt-1">{item.realDate}</p>
+          </div>
+        </div>
+        <p className="text-[11px] text-text-muted">Fingerprint index is mock — reverse-match against seed, not a live crawler.</p>
         <p className="text-xs text-text-primary leading-relaxed border border-border-subtle rounded-lg p-3 bg-bg-surface">
           {item.action}
         </p>

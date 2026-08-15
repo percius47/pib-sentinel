@@ -15,7 +15,6 @@ interface Turn {
   done: boolean;
 }
 
-// Global keyboard shortcut — Ctrl/Cmd+K opens Ask Sentinel.
 export function useAskSentinelHotkey() {
   const { openPanel } = useAskSentinel();
   useEffect(() => {
@@ -129,11 +128,11 @@ export default function AskSentinel() {
       <button
         type="button"
         onClick={() => openPanel()}
-        aria-label="Ask Sentinel"
+        aria-label="Ask Prahari"
         className={`ask-cta ${open ? 'hidden' : 'hidden md:inline-flex'}`}
       >
         <MessageCircle className="w-4 h-4" strokeWidth={2.25} />
-        Ask Sentinel
+        Ask Prahari
       </button>
 
       {open && (
@@ -145,12 +144,12 @@ export default function AskSentinel() {
           <aside
             className="fixed inset-y-0 right-0 z-50 w-full md:w-[440px] bg-bg-card border-l border-border-strong flex flex-col animate-slide-in-right"
             role="dialog"
-            aria-label="Ask Sentinel"
+            aria-label="Ask Prahari"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
               <div className="flex items-center gap-2">
                 <SentinelMark className="w-4 h-4 text-text-primary" />
-                <span className="text-sm font-semibold text-text-primary">Ask Sentinel</span>
+                <span className="text-sm font-semibold text-text-primary">Ask Prahari</span>
               </div>
               <button
                 onClick={close}
@@ -169,7 +168,7 @@ export default function AskSentinel() {
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask anything about today's coverage…"
+                placeholder="Ask about ministries, coverage, regions, misinfo…"
                 className="flex-1 text-sm px-3 py-2 rounded-lg border border-border-subtle bg-bg-surface text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border-strong"
               />
               <button
@@ -201,7 +200,7 @@ export default function AskSentinel() {
                     ))}
                   </div>
                   <p className="text-[11px] text-text-muted mt-4 leading-relaxed">
-                    Mock intelligence layer for demo. Responses are pre-authored and cite real mock coverage; clicking a citation opens the source article.
+                    Whole-platform copilot for government, news and media. Answers cite coverage you can open. To chat about one piece, use Chat on that article in Coverage.
                   </p>
                 </div>
               )}
@@ -234,8 +233,6 @@ function AssistantBubble({
   onCitation: (id: number) => void;
 }) {
   const parts = useMemo(() => {
-    // Split text on inline citation markers `[c:<id>]`. Only render chips
-    // once the marker has fully appeared in the streamed text.
     const rx = /\[c:(\d+)\]/g;
     const out: Array<{ kind: 'text'; text: string } | { kind: 'chip'; articleId: number }> = [];
     let last = 0;

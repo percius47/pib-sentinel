@@ -25,7 +25,10 @@ import {
   type GraphNodeKind,
 } from '@/data/knowledgeGraph';
 
-const KINDS: GraphNodeKind[] = ['Ministry', 'Region', 'Outlet', 'Article', 'Narrative', 'Cluster', 'Claim'];
+const KINDS: GraphNodeKind[] = [
+  'Ministry', 'Region', 'Outlet', 'Article', 'Narrative', 'Cluster', 'Claim',
+  'Scheme', 'Official', 'Journalist', 'PastResponse',
+];
 
 function EntityNode({ data, selected }: NodeProps) {
   const entity = data as unknown as GraphEntity;

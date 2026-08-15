@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect, CSSProperties } from 'react';
 import type { GenuineData } from '@/data/mockData';
+import { genuineAxes } from '@/data/mockData';
 
 type Size = 'sm' | 'md' | 'lg';
 
@@ -113,6 +114,7 @@ export default function GenuineRing({
     };
   }, [open, data.score]);
 
+  const axes = genuineAxes(data);
   const px = SIZE[size];
   const stroke = STROKE[size];
   const radius = (px - stroke) / 2;
@@ -193,11 +195,27 @@ export default function GenuineRing({
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] uppercase tracking-wider text-text-muted">Genuine Score</p>
+            <p className="text-[10px] uppercase tracking-wider text-text-muted">Genuine · two axes</p>
             <span className="text-sm font-semibold" style={{ color: scoreColor(data.score) }}>{data.score}</span>
           </div>
           <p className="text-[11px] uppercase tracking-wider text-text-muted mb-1">{data.marker}</p>
-          <p className="text-xs text-text-secondary leading-snug mb-2">{data.note}</p>
+          <p className="text-xs text-text-secondary leading-snug mb-3">{data.note}</p>
+          <div className="grid grid-cols-2 gap-1.5 mb-3 text-[10px] leading-snug">
+            <div className={`rounded-md border p-2 ${axes.quadrant === 'genuine-organic' ? 'border-accent-green/50 bg-accent-green/10' : 'border-border-subtle'}`}>
+              <p className="font-semibold text-text-primary">Genuine + Organic</p>
+            </div>
+            <div className={`rounded-md border p-2 ${axes.quadrant === 'genuine-manufactured' ? 'border-accent-amber/50 bg-accent-amber/10' : 'border-border-subtle'}`}>
+              <p className="font-semibold text-text-primary">Genuine + Manufactured</p>
+            </div>
+            <div className={`rounded-md border p-2 ${axes.quadrant === 'fabricated-organic' ? 'border-accent-amber/40 bg-accent-amber/5' : 'border-border-subtle'}`}>
+              <p className="font-semibold text-text-primary">Fabricated + Organic</p>
+            </div>
+            <div className={`rounded-md border p-2 ${axes.quadrant === 'fabricated-manufactured' ? 'border-accent-red/50 bg-accent-red/10' : 'border-border-subtle'}`}>
+              <p className="font-semibold text-text-primary">Fabricated + Manufactured</p>
+            </div>
+          </div>
+          <p className="text-[10px] text-text-muted mb-1">Content {axes.content} genuine · Spread {axes.spread} manufactured</p>
+          <p className="text-xs text-text-secondary leading-snug mb-3">{axes.action}</p>
           <dl className="space-y-1.5">
             {factors.map((f) => (
               <div key={f.key} className="flex items-center gap-2">

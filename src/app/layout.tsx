@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'PIB Sentinel',
-  description: 'Media intelligence for Press Information Bureau, Government of India',
+  title: 'Prahari',
+  description: 'Narrative command for Press Information Bureau, Government of India',
 };
 
 export default async function RootLayout({ children }: LayoutProps<'/'>) {

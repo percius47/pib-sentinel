@@ -7,6 +7,7 @@ import {
   type Narrative,
   type StoryCluster,
 } from './mockData';
+import { graphJournalists, graphOfficials, graphSchemes, pastResponses } from './prahariAddons';
 
 export type GraphNodeKind =
   | 'Ministry'
@@ -15,7 +16,11 @@ export type GraphNodeKind =
   | 'Article'
   | 'Narrative'
   | 'Cluster'
-  | 'Claim';
+  | 'Claim'
+  | 'Scheme'
+  | 'Official'
+  | 'Journalist'
+  | 'PastResponse';
 
 export const GRAPH_KIND_COLOR: Record<GraphNodeKind, string> = {
   Ministry: '#c45a12',
@@ -25,6 +30,10 @@ export const GRAPH_KIND_COLOR: Record<GraphNodeKind, string> = {
   Narrative: '#8b5cf6',
   Cluster: '#06b6d4',
   Claim: '#ef4444',
+  Scheme: '#d97706',
+  Official: '#6366f1',
+  Journalist: '#0ea5e9',
+  PastResponse: '#14b8a6',
 };
 
 export interface GraphEntity {
@@ -210,17 +219,47 @@ export function buildKnowledgeGraph(filters: GraphFilters): KnowledgeGraph {
     if (related) addLink(`claim:${m.id}`, `art:${related.id}`);
   }
 
+  for (const s of graphSchemes) {
+    addNode({ id: s.id, kind: 'Scheme', label: s.label, subtitle: s.ministry, articleId: s.articleId, clusterId: s.clusterId });
+    addNode({ id: slug('min', s.ministry), kind: 'Ministry', label: s.ministry.replace('Ministry of ', ''), subtitle: s.ministry });
+    addLink(s.id, slug('min', s.ministry));
+    if (nodeMap.has(`clu:${s.clusterId}`)) addLink(s.id, `clu:${s.clusterId}`);
+    if (nodeMap.has(`art:${s.articleId}`)) addLink(s.id, `art:${s.articleId}`);
+  }
+  for (const o of graphOfficials) {
+    addNode({ id: o.id, kind: 'Official', label: o.label, subtitle: o.ministry, articleId: o.articleId });
+    addNode({ id: slug('min', o.ministry), kind: 'Ministry', label: o.ministry.replace('Ministry of ', ''), subtitle: o.ministry });
+    addLink(o.id, slug('min', o.ministry));
+    if (nodeMap.has(`art:${o.articleId}`)) addLink(o.id, `art:${o.articleId}`);
+  }
+  for (const j of graphJournalists) {
+    addNode({ id: j.id, kind: 'Journalist', label: j.label, subtitle: `${j.outlet} · ${j.beat}`, articleId: j.articleId });
+    addNode({ id: slug('out', j.outlet), kind: 'Outlet', label: j.outlet });
+    addNode({ id: slug('reg', j.region), kind: 'Region', label: j.region });
+    addLink(j.id, slug('out', j.outlet));
+    addLink(j.id, slug('reg', j.region));
+    if (nodeMap.has(`art:${j.articleId}`)) addLink(j.id, `art:${j.articleId}`);
+  }
+  for (const p of pastResponses) {
+    addNode({ id: p.id, kind: 'PastResponse', label: p.label, subtitle: p.worked ? 'Worked' : 'Backfired', claimId: p.misinfoId });
+    if (nodeMap.has(`claim:${p.misinfoId}`)) addLink(p.id, `claim:${p.misinfoId}`);
+  }
+
   return { nodes: Array.from(nodeMap.values()), links };
 }
 
 const RING: Record<GraphNodeKind, number> = {
   Narrative: 0,
-  Cluster: 170,
-  Claim: 230,
-  Ministry: 300,
-  Region: 380,
-  Outlet: 470,
-  Article: 560,
+  Cluster: 160,
+  Scheme: 210,
+  Claim: 250,
+  PastResponse: 290,
+  Official: 330,
+  Ministry: 370,
+  Journalist: 420,
+  Region: 470,
+  Outlet: 530,
+  Article: 600,
 };
 
 export function layoutKnowledgeGraph(graph: KnowledgeGraph) {
