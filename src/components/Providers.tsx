@@ -1,6 +1,13 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode, useCallback } from 'react';
+import {
+  DEFAULT_VIEW,
+  parseWorkspaceSearch,
+  workspaceSearchString,
+  type WorkspaceId,
+  type WorkspaceView,
+} from '@/data/workspaces';
 
 type Theme = 'light' | 'dark';
 
@@ -74,7 +81,7 @@ interface DensityContextValue {
 }
 
 const DensityContext = createContext<DensityContextValue>({
-  density: 'compact',
+  density: 'comfortable',
   toggle: () => {},
   set: () => {},
 });
@@ -156,6 +163,33 @@ export function useFocus() {
   return useContext(FocusContext);
 }
 
+// -- Workspace --------------------------------------------------------------
+
+interface WorkspaceContextValue {
+  workspace: WorkspaceId;
+  view: WorkspaceView | null;
+  setWorkspace: (ws: WorkspaceId, view?: WorkspaceView) => void;
+  setView: (view: WorkspaceView) => void;
+}
+
+const WorkspaceContext = createContext<WorkspaceContextValue>({
+  workspace: 'desk',
+  view: null,
+  setWorkspace: () => {},
+  setView: () => {},
+});
+
+export function useWorkspace() {
+  return useContext(WorkspaceContext);
+}
+
+function writeWorkspaceUrl(workspace: WorkspaceId, view: WorkspaceView | null) {
+  if (typeof window === 'undefined') return;
+  const next = workspaceSearchString(workspace, view);
+  const url = `${window.location.pathname}${next}${window.location.hash}`;
+  window.history.replaceState(window.history.state, '', url);
+}
+
 // -- Provider --------------------------------------------------------------
 
 export default function Providers({ children }: { children: ReactNode }) {
@@ -163,11 +197,13 @@ export default function Providers({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [density, setDensityState] = useState<Density>('compact');
+  const [density, setDensityState] = useState<Density>('comfortable');
   const [askOpen, setAskOpen] = useState(false);
   const [askPreset, setAskPreset] = useState<string | null>(null);
   const [snoozed, setSnoozed] = useState<Set<string>>(new Set());
   const [focusRequest, setFocusRequest] = useState<FocusRequest | null>(null);
+  const [workspace, setWorkspaceState] = useState<WorkspaceId>('desk');
+  const [view, setViewState] = useState<WorkspaceView | null>(null);
 
   useEffect(() => {
     const storedTheme = localStorage.getItem('pib-theme') as Theme | null;
@@ -176,12 +212,15 @@ export default function Providers({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute('data-theme', initial);
     document.cookie = `pib-theme=${initial};path=/;max-age=31536000;SameSite=Lax`;
     setCollapsed(localStorage.getItem('pib-sidebar-collapsed') === '1');
-    const storedDensity = localStorage.getItem('pib-density');
-    if (storedDensity === 'compact' || storedDensity === 'comfortable') setDensityState(storedDensity);
+    localStorage.setItem('pib-density', 'comfortable');
+    setDensityState('comfortable');
     try {
       const raw = localStorage.getItem(todayKey());
       if (raw) setSnoozed(new Set(JSON.parse(raw)));
     } catch {}
+    const parsed = parseWorkspaceSearch(window.location.search);
+    setWorkspaceState(parsed.workspace);
+    setViewState(parsed.view);
   }, []);
 
   const toggle = useCallback(() => {
@@ -252,7 +291,30 @@ export default function Providers({ children }: { children: ReactNode }) {
   }, [persistSnoozed]);
   const isSnoozed = useCallback((id: string) => snoozed.has(id), [snoozed]);
 
-  const requestFocus = useCallback((r: FocusRequest) => setFocusRequest(r), []);
+  const setWorkspace = useCallback((ws: WorkspaceId, nextView?: WorkspaceView) => {
+    const resolved = nextView ?? DEFAULT_VIEW[ws];
+    setWorkspaceState(ws);
+    setViewState(resolved);
+    writeWorkspaceUrl(ws, resolved);
+  }, []);
+
+  const setView = useCallback((nextView: WorkspaceView) => {
+    setViewState(nextView);
+    writeWorkspaceUrl(workspace, nextView);
+  }, [workspace]);
+
+  const requestFocus = useCallback((r: FocusRequest) => {
+    if (r.articleId) {
+      setWorkspaceState('coverage');
+      setViewState('feed');
+      writeWorkspaceUrl('coverage', 'feed');
+    } else if (r.narrativeId) {
+      setWorkspaceState('intelligence');
+      setViewState('narratives');
+      writeWorkspaceUrl('intelligence', 'narratives');
+    }
+    setFocusRequest(r);
+  }, []);
   const clearFocus = useCallback(() => setFocusRequest(null), []);
 
   const themeValue = useMemo(() => ({ theme, toggle }), [theme, toggle]);
@@ -280,6 +342,10 @@ export default function Providers({ children }: { children: ReactNode }) {
     () => ({ request: focusRequest, requestFocus, clear: clearFocus }),
     [focusRequest, requestFocus, clearFocus],
   );
+  const workspaceValue = useMemo(
+    () => ({ workspace, view, setWorkspace, setView }),
+    [workspace, view, setWorkspace, setView],
+  );
 
   return (
     <ThemeContext.Provider value={themeValue}>
@@ -288,9 +354,11 @@ export default function Providers({ children }: { children: ReactNode }) {
           <DensityContext.Provider value={densityValue}>
             <AskSentinelContext.Provider value={askValue}>
               <SnoozeContext.Provider value={snoozeValue}>
-                <FocusContext.Provider value={focusValue}>
-                  {children}
-                </FocusContext.Provider>
+                <WorkspaceContext.Provider value={workspaceValue}>
+                  <FocusContext.Provider value={focusValue}>
+                    {children}
+                  </FocusContext.Provider>
+                </WorkspaceContext.Provider>
               </SnoozeContext.Provider>
             </AskSentinelContext.Provider>
           </DensityContext.Provider>

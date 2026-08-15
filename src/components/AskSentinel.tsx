@@ -130,7 +130,7 @@ export default function AskSentinel() {
         type="button"
         onClick={() => openPanel()}
         aria-label="Ask Sentinel"
-        className={`ask-cta ${open ? 'hidden' : ''}`}
+        className={`ask-cta ${open ? 'hidden' : 'hidden md:inline-flex'}`}
       >
         <MessageCircle className="w-4 h-4" strokeWidth={2.25} />
         Ask Sentinel

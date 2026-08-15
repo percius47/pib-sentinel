@@ -1137,15 +1137,11 @@ export const narrativeDetails: Record<number, {
 };
 
 export const sidebarItems = [
-  { id: 'command-center', label: 'Command Center', icon: 'LayoutDashboard' },
-  { id: 'media-feed', label: 'Media Coverage', icon: 'Newspaper' },
-  { id: 'narratives', label: 'Narratives', icon: 'GitBranch' },
-  { id: 'regional', label: 'Regional Coverage', icon: 'Map' },
-  { id: 'early-warning', label: 'Alerts', icon: 'AlertTriangle' },
-  { id: 'cross-platform', label: 'Cross-Platform', icon: 'Monitor' },
-  { id: 'penetration', label: 'Message Penetration', icon: 'Radio' },
-  { id: 'misinfo', label: 'Misinformation Watch', icon: 'ShieldAlert' },
-  { id: 'briefing', label: 'Ministry Briefing', icon: 'FileText' },
+  { id: 'desk', label: 'Desk', icon: 'LayoutDashboard' },
+  { id: 'watch', label: 'Watch', icon: 'AlertTriangle' },
+  { id: 'coverage', label: 'Coverage', icon: 'Newspaper' },
+  { id: 'intelligence', label: 'Intel', icon: 'GitBranch' },
+  { id: 'brief', label: 'Brief', icon: 'FileText' },
 ];
 
 export type Article = (typeof articles)[number] & {

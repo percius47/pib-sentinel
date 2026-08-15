@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Activity, TrendingUp, AlertTriangle, BarChart3,
   ArrowUpRight, ArrowDownRight, Newspaper, Filter, Clock,
@@ -19,7 +19,9 @@ import {
   storyClusters, computeGenuine, articleCluster, mediaFilterKey,
   type Article, type Narrative, type StoryCluster,
 } from '@/data/mockData';
-import { useDensity, useFilters, useFocus, useSnooze, useTheme } from '@/components/Providers';
+import { useDensity, useFilters, useFocus, useSnooze, useTheme, useWorkspace } from '@/components/Providers';
+import SecondaryTabs from '@/components/SecondaryTabs';
+import { workspaceMeta, workspaceTabs } from '@/data/workspaces';
 import ArticleModal from '@/components/ArticleModal';
 import NarrativeModal from '@/components/NarrativeModal';
 import StanceCompareModal from '@/components/StanceCompareModal';
@@ -106,12 +108,12 @@ function ThreatLevelBanner() {
   );
 }
 
-function KPICard({ title, value, delta, icon: Icon, positive }: {
+function KPICard({ title, value, delta, icon: Icon, positive, onActivate }: {
   title: string; value: string | number; delta: string;
-  icon: React.ElementType; positive?: boolean;
+  icon: React.ElementType; positive?: boolean; onActivate?: () => void;
 }) {
-  return (
-    <div className="glass-card p-4">
+  const inner = (
+    <>
       <div className="flex items-start justify-between mb-2">
         <div className="w-8 h-8 rounded-lg border border-border-subtle flex items-center justify-center">
           <Icon className="w-4 h-4 text-text-secondary" />
@@ -123,8 +125,17 @@ function KPICard({ title, value, delta, icon: Icon, positive }: {
       </div>
       <p className="text-xl md:text-2xl font-bold text-text-primary">{typeof value === 'number' ? value.toLocaleString() : value}</p>
       <p className="text-[10px] md:text-xs text-text-muted mt-1 uppercase tracking-wider">{title}</p>
-    </div>
+    </>
   );
+  const className = `glass-card p-4 text-left w-full ${onActivate ? 'hover:bg-bg-card-hover cursor-pointer' : ''}`;
+  if (onActivate) {
+    return (
+      <button type="button" onClick={onActivate} className={className}>
+        {inner}
+      </button>
+    );
+  }
+  return <div className={className}>{inner}</div>;
 }
 
 function SentimentDonut() {
@@ -251,10 +262,20 @@ function NarrativeRow({ n, rank }: { n: Narrative; rank: number }) {
   );
 }
 
-function CommandCenter({ filteredNarratives }: { filteredNarratives: Narrative[] }) {
+function CommandCenter({
+  filteredNarratives,
+  highAlertCount,
+  misinfoCount,
+}: {
+  filteredNarratives: Narrative[];
+  highAlertCount: number;
+  misinfoCount: number;
+}) {
+  const { setWorkspace } = useWorkspace();
+  const preview = filteredNarratives.slice(0, 3);
   return (
-    <section id="command-center" className="px-4 md:px-8 py-8 scroll-mt-20">
-      <SectionHeader title="Command Center" subtitle="Overview" />
+    <section id="desk" className="px-4 md:px-8 py-6 md:py-8">
+      <SectionHeader title="Duty Desk" subtitle="Overview for this shift" />
       <ExecutiveDigest section="command-center" />
       <ThreatLevelBanner />
 
@@ -263,25 +284,70 @@ function CommandCenter({ filteredNarratives }: { filteredNarratives: Narrative[]
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-        <KPICard title="Coverage Volume" value={kpiData.coverageVolume} delta={kpiData.coverageDelta} icon={Activity} />
-        <KPICard title="Active Narratives" value={filteredNarratives.length} delta={kpiData.narrativeDelta} icon={TrendingUp} />
-        <KPICard title="Pending Alerts" value={kpiData.pendingAlerts} delta={kpiData.alertsDelta} icon={AlertTriangle} positive={false} />
+        <KPICard
+          title="Coverage Volume"
+          value={kpiData.coverageVolume}
+          delta={kpiData.coverageDelta}
+          icon={Activity}
+          onActivate={() => setWorkspace('coverage', 'feed')}
+        />
+        <KPICard
+          title="Active Narratives"
+          value={filteredNarratives.length}
+          delta={kpiData.narrativeDelta}
+          icon={TrendingUp}
+          onActivate={() => setWorkspace('intelligence', 'narratives')}
+        />
+        <KPICard
+          title="Pending Alerts"
+          value={kpiData.pendingAlerts}
+          delta={kpiData.alertsDelta}
+          icon={AlertTriangle}
+          positive={false}
+          onActivate={() => setWorkspace('watch', 'alerts')}
+        />
         <KPICard title="Confidence Score" value={`${kpiData.aiConfidence}%`} delta={kpiData.confidenceDelta} icon={BarChart3} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+        <button type="button" onClick={() => setWorkspace('watch', 'alerts')} className="glass-card p-4 text-left hover:bg-bg-card-hover">
+          <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">High alerts</p>
+          <p className="text-lg font-semibold text-accent-red">{highAlertCount}</p>
+        </button>
+        <button type="button" onClick={() => setWorkspace('watch', 'misinfo')} className="glass-card p-4 text-left hover:bg-bg-card-hover">
+          <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">Misinfo items</p>
+          <p className="text-lg font-semibold text-text-primary">{misinfoCount}</p>
+        </button>
+        <button type="button" onClick={() => setWorkspace('brief')} className="glass-card p-4 text-left hover:bg-bg-card-hover">
+          <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">Briefing</p>
+          <p className="text-lg font-semibold text-text-primary">Ready</p>
+        </button>
+      </div>
+
+      <details className="md:hidden mt-3 glass-card p-4">
+        <summary className="text-sm text-text-secondary cursor-pointer">View charts</summary>
+        <div className="grid grid-cols-1 gap-3 mt-3">
+          <SentimentDonut />
+          <CoverageTrendChart />
+        </div>
+      </details>
+      <div className="hidden md:grid grid-cols-2 gap-3 mt-3">
         <SentimentDonut />
         <CoverageTrendChart />
       </div>
 
-      <div className="glass-card mt-3 overflow-hidden">
-        <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Top Media Narratives</h3>
-          <span className="text-xs text-text-muted">{filteredNarratives.length} tracked</span>
-        </div>
-        {filteredNarratives.length === 0 ? (
-          <div className="p-6"><EmptyFilter /></div>
-        ) : (
+      {preview.length > 0 && (
+        <div className="glass-card mt-3 overflow-hidden">
+          <div className="px-5 py-3 border-b border-border-subtle flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Top Media Narratives</h3>
+            <button
+              type="button"
+              onClick={() => setWorkspace('intelligence', 'narratives')}
+              className="text-xs text-text-muted hover:text-text-primary"
+            >
+              Open Intelligence
+            </button>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px]">
               <thead>
@@ -295,14 +361,14 @@ function CommandCenter({ filteredNarratives }: { filteredNarratives: Narrative[]
                 </tr>
               </thead>
               <tbody>
-                {filteredNarratives.map((n, i) => (
+                {preview.map((n, i) => (
                   <NarrativeRow key={n.id} n={n} rank={i + 1} />
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -434,10 +500,12 @@ function MediaFeed({
   filteredArticles,
   filteredClusters,
   focusArticleId,
+  pane,
 }: {
   filteredArticles: Article[];
   filteredClusters: StoryCluster[];
   focusArticleId: number | null;
+  pane: 'stories' | 'feed';
 }) {
   const { openCluster } = useDetail();
   const [selectedSentiment, setSelectedSentiment] = useState('All');
@@ -450,71 +518,72 @@ function MediaFeed({
   });
 
   return (
-    <section id="media-feed" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
-      <SectionHeader title="Media Coverage" subtitle="Filtered coverage across print, digital, and broadcast" />
-
-      <div className="mb-5">
-        <ExecutiveDigest section="story-clusters" />
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-[11px] uppercase tracking-wider text-text-muted flex items-center gap-2">
-            <Layers className="w-3.5 h-3.5" /> Story clusters ({filteredClusters.length})
-          </h3>
-          <span className="text-[11px] text-text-muted">Same event, N outlets</span>
-        </div>
-        {filteredClusters.length === 0 ? (
-          <div className="glass-card p-6 text-center text-sm text-text-muted">
-            No clusters match current filters.
+    <div>
+      {pane === 'stories' && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[11px] uppercase tracking-wider text-text-muted flex items-center gap-2">
+              <Layers className="w-3.5 h-3.5" /> Story clusters ({filteredClusters.length})
+            </h3>
+            <span className="text-[11px] text-text-muted">Same event, N outlets</span>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {filteredClusters.map((c) => (
-              <StoryClusterCard key={c.id} cluster={c} onOpen={openCluster} />
+          {filteredClusters.length === 0 ? (
+            <div className="glass-card p-6 text-center text-sm text-text-muted">
+              No clusters match current filters.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {filteredClusters.map((c) => (
+                <StoryClusterCard key={c.id} cluster={c} onOpen={openCluster} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {pane === 'feed' && (
+        <>
+          <div className="glass-card p-3 mb-4 flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-text-muted" />
+              <span className="text-[11px] text-text-muted uppercase tracking-wider">Sentiment</span>
+            </div>
+            {['All', 'Positive', 'Negative', 'Mixed', 'Neutral'].map((s) => (
+              <button
+                key={s}
+                onClick={() => setSelectedSentiment(s)}
+                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                  selectedSentiment === s
+                    ? 'border-border-strong text-text-primary bg-bg-card-hover'
+                    : 'text-text-secondary border-border-subtle hover:border-border-strong'
+                }`}
+              >
+                {s}
+              </button>
             ))}
+            <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto">
+              <span className="text-xs text-text-muted">Min relevance</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={minRelevance}
+                onChange={(e) => setMinRelevance(Number(e.target.value))}
+                className="w-24"
+              />
+              <span className="text-xs font-mono w-8">{minRelevance}%</span>
+            </div>
           </div>
-        )}
-      </div>
 
-      <ExecutiveDigest section="media-feed" />
-
-      <div className="glass-card p-3 mb-4 flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-text-muted" />
-          <span className="text-[11px] text-text-muted uppercase tracking-wider">Sentiment</span>
-        </div>
-        {['All', 'Positive', 'Negative', 'Mixed', 'Neutral'].map((s) => (
-          <button
-            key={s}
-            onClick={() => setSelectedSentiment(s)}
-            className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-              selectedSentiment === s
-                ? 'border-border-strong text-text-primary bg-bg-card-hover'
-                : 'text-text-secondary border-border-subtle hover:border-border-strong'
-            }`}
-          >
-            {s}
-          </button>
-        ))}
-        <div className="flex items-center gap-2 sm:ml-auto w-full sm:w-auto">
-          <span className="text-xs text-text-muted">Min relevance</span>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={minRelevance}
-            onChange={(e) => setMinRelevance(Number(e.target.value))}
-            className="w-24"
-          />
-          <span className="text-xs font-mono w-8">{minRelevance}%</span>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        {filtered.map((article) => (
-          <ArticleCard key={article.id} article={article} focused={focusArticleId === article.id} />
-        ))}
-        {filtered.length === 0 && <EmptyFilter />}
-      </div>
-    </section>
+          <div className="space-y-2">
+            {filtered.map((article) => (
+              <ArticleCard key={article.id} article={article} focused={focusArticleId === article.id} />
+            ))}
+            {filtered.length === 0 && <EmptyFilter />}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -524,86 +593,66 @@ function MediaFeed({
 
 function NarrativeIntelligence({
   filteredPercolation,
-  filteredClusters,
 }: {
   filteredPercolation: typeof percolationData;
-  filteredClusters: StoryCluster[];
 }) {
-  const { openNarrative, openCluster } = useDetail();
+  const { openNarrative } = useDetail();
   const { isSnoozed } = useSnooze();
   const visiblePercolation = filteredPercolation.filter((p) => !isSnoozed(`narrative-${p.id}`));
   return (
-    <section id="narratives" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
-      <SectionHeader title="Narratives" subtitle="Story clusters and cross-outlet spread" />
-      <ExecutiveDigest section="narratives" />
-
-      <div className="space-y-4">
-        {visiblePercolation.length === 0 ? (
-          filteredPercolation.length > 0
-            ? <div className="glass-card p-6 text-center text-sm text-text-muted">All narrative cards handled for today.</div>
-            : <EmptyFilter />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {visiblePercolation.map((p) => (
-              <div key={p.id} className="relative">
-              <ClickableCard
-                onActivate={() => openNarrative(p.id)}
-                label={p.narrative}
-                className="glass-card clickable p-4 text-left min-h-0 w-full"
-                contentClassName="flex flex-col"
-              >
-                <h4 className="text-sm font-semibold text-text-primary leading-snug line-clamp-2">{p.narrative}</h4>
-                <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border ${
-                    p.status === 'ESCALATING'
-                      ? 'border-accent-red/30 text-accent-red'
-                      : p.status === 'SATURATED'
-                        ? 'border-accent-green/30 text-accent-green'
-                        : 'border-border-strong text-text-secondary'
-                  }`}>
-                    {p.status}
-                  </span>
-                  <span className="text-[11px] text-text-muted">
-                    Velocity: <span className={p.velocity === 'High' ? 'text-accent-red' : 'text-text-secondary'}>{p.velocity}</span>
-                  </span>
-                </div>
-                <div className="relative pl-5 flex-1">
-                  {p.timeline.slice(0, 4).map((t, i, arr) => (
-                    <div key={i} className="relative pb-3 last:pb-0">
-                      <div className="absolute -left-[17px] top-1 w-2.5 h-2.5 rounded-full bg-bg-card border-2 border-text-muted" />
-                      {i < arr.length - 1 && <div className="absolute -left-[12px] top-3.5 bottom-0 w-px bg-border-strong" />}
-                      <p className="text-[10px] font-mono text-text-muted">{t.day}</p>
-                      <p className="text-xs text-text-primary leading-snug">{t.outlet}</p>
-                      <p className="text-[10px] text-text-muted">{t.type}</p>
-                    </div>
-                  ))}
-                  {p.timeline.length > 4 && (
-                    <p className="text-[10px] text-text-muted mt-1">+{p.timeline.length - 4} more</p>
-                  )}
-                </div>
-              </ClickableCard>
-              <div className="absolute top-2 right-2 z-20">
-                <SnoozeButton id={`narrative-${p.id}`} />
+    <div className="space-y-4">
+      {visiblePercolation.length === 0 ? (
+        filteredPercolation.length > 0
+          ? <div className="glass-card p-6 text-center text-sm text-text-muted">All narrative cards handled for today.</div>
+          : <EmptyFilter />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {visiblePercolation.map((p) => (
+            <div key={p.id} className="relative">
+            <ClickableCard
+              onActivate={() => openNarrative(p.id)}
+              label={p.narrative}
+              className="glass-card clickable p-4 text-left min-h-0 w-full"
+              contentClassName="flex flex-col"
+            >
+              <h4 className="text-sm font-semibold text-text-primary leading-snug line-clamp-2">{p.narrative}</h4>
+              <div className="flex items-center gap-2 mt-2 mb-3 flex-wrap">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border ${
+                  p.status === 'ESCALATING'
+                    ? 'border-accent-red/30 text-accent-red'
+                    : p.status === 'SATURATED'
+                      ? 'border-accent-green/30 text-accent-green'
+                      : 'border-border-strong text-text-secondary'
+                }`}>
+                  {p.status}
+                </span>
+                <span className="text-[11px] text-text-muted">
+                  Velocity: <span className={p.velocity === 'High' ? 'text-accent-red' : 'text-text-secondary'}>{p.velocity}</span>
+                </span>
               </div>
+              <div className="relative pl-5 flex-1">
+                {p.timeline.slice(0, 4).map((t, i, arr) => (
+                  <div key={i} className="relative pb-3 last:pb-0">
+                    <div className="absolute -left-[17px] top-1 w-2.5 h-2.5 rounded-full bg-bg-card border-2 border-text-muted" />
+                    {i < arr.length - 1 && <div className="absolute -left-[12px] top-3.5 bottom-0 w-px bg-border-strong" />}
+                    <p className="text-[10px] font-mono text-text-muted">{t.day}</p>
+                    <p className="text-xs text-text-primary leading-snug">{t.outlet}</p>
+                    <p className="text-[10px] text-text-muted">{t.type}</p>
+                  </div>
+                ))}
+                {p.timeline.length > 4 && (
+                  <p className="text-[10px] text-text-muted mt-1">+{p.timeline.length - 4} more</p>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-
-        {filteredClusters.length > 0 && (
-          <div className="glass-card p-4 md:p-5">
-            <h4 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wider flex items-center gap-2">
-              <Layers className="w-3.5 h-3.5" /> Same story across outlets
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredClusters.slice(0, 3).map((c) => (
-                <StoryClusterCard key={c.id} cluster={c} onOpen={openCluster} />
-              ))}
+            </ClickableCard>
+            <div className="absolute top-2 right-2 z-20">
+              <SnoozeButton id={`narrative-${p.id}`} />
             </div>
-          </div>
-        )}
-      </div>
-    </section>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -614,10 +663,7 @@ function NarrativeIntelligence({
 function RegionalIntelligence({ filteredRegions }: { filteredRegions: typeof regionData }) {
   const { tick } = useChartTheme();
   return (
-    <section id="regional" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
-      <SectionHeader title="Regional Coverage" subtitle="Regional coverage and gaps" />
-      <ExecutiveDigest section="regional" />
-
+    <div>
       {filteredRegions.length === 0 ? (
         <EmptyFilter />
       ) : (
@@ -686,7 +732,7 @@ function RegionalIntelligence({ filteredRegions }: { filteredRegions: typeof reg
           </div>
         </>
       )}
-    </section>
+    </div>
   );
 }
 
@@ -702,13 +748,7 @@ function EarlyWarningSection({ filteredAlerts }: { filteredAlerts: typeof alerts
   const iconFor = (sev: string) => (sev === 'HIGH' ? Flame : sev === 'MEDIUM' ? AlertTriangle : Eye);
 
   return (
-    <section id="early-warning" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
-      <SectionHeader
-        title="Alerts"
-        subtitle="Active alerts and predicted escalations"
-        badge={`${visible.filter((a) => a.severity === 'HIGH').length} HIGH`}
-      />
-      <ExecutiveDigest section="early-warning" />
+    <div>
 
       <div className="space-y-3">
         {visible.map((alert) => {
@@ -796,7 +836,7 @@ function EarlyWarningSection({ filteredAlerts }: { filteredAlerts: typeof alerts
         )}
         {filteredAlerts.length === 0 && <EmptyFilter />}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -828,10 +868,7 @@ function CrossPlatformSection() {
     : crossPlatformData.social.topPlatforms;
 
   return (
-    <section id="cross-platform" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
-      <SectionHeader title="Cross-Platform" subtitle="Coverage across print, TV, digital, social" />
-      <ExecutiveDigest section="cross-platform" />
-
+    <div>
       <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
         {tabs.map((t) => {
           const TabIcon = t.icon;
@@ -906,7 +943,7 @@ function CrossPlatformSection() {
           </table>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -918,11 +955,7 @@ function MessagePenetrationSection({ filtered }: { filtered: typeof messagePenet
   const { density } = useDensity();
   const compact = density === 'compact';
   return (
-    <section id="penetration" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
-      <SectionHeader title="Message Penetration" subtitle="Intended message vs actual media pickup" />
-      <ExecutiveDigest section="penetration" />
-
-      <div className="space-y-3">
+    <div className="space-y-3">
         {filtered.map((mp, idx) => (
           <div key={idx} className={`glass-card ${compact ? 'p-3' : 'p-5'}`}>
             <div className="flex items-start justify-between gap-3 mb-3">
@@ -972,8 +1005,7 @@ function MessagePenetrationSection({ filtered }: { filtered: typeof messagePenet
           </div>
         ))}
         {filtered.length === 0 && <EmptyFilter />}
-      </div>
-    </section>
+    </div>
   );
 }
 
@@ -987,9 +1019,7 @@ function MisinfoWatchSection({ filtered }: { filtered: typeof misinfoItems }) {
   const compact = density === 'compact';
   const visible = filtered.filter((m) => !isSnoozed(`misinfo-${m.id}`));
   return (
-    <section id="misinfo" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
-      <SectionHeader title="Misinformation Watch" subtitle="False claims tracker with verification status" badge={`${visible.length} Active`} />
-      <ExecutiveDigest section="misinfo" />
+    <div>
 
       <div className="glass-card p-3 mb-4 flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-4 flex-wrap">
@@ -1057,7 +1087,7 @@ function MisinfoWatchSection({ filtered }: { filtered: typeof misinfoItems }) {
         )}
         {filtered.length === 0 && <EmptyFilter />}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -1071,10 +1101,7 @@ function MinistryBriefingSection() {
   const b = ministryBriefings[key] ?? ministryBriefing;
 
   return (
-    <section id="briefing" className="px-4 md:px-8 py-8 scroll-mt-20 border-t border-border-subtle">
-      <SectionHeader title="Ministry Briefing" subtitle="Daily brief for ministry officers" />
-      <ExecutiveDigest section="briefing" />
-      <div className="glass-card overflow-hidden">
+    <div className="glass-card overflow-hidden">
           <div className="px-6 py-4 border-b border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-base font-bold text-text-primary">{b.ministry}</h3>
@@ -1161,14 +1188,26 @@ function MinistryBriefingSection() {
               Restricted • Government of India
             </p>
           </div>
-        </div>
-    </section>
+    </div>
   );
 }
 
 // ---------------------------------------------------------------------------
 // Page shell
 // ---------------------------------------------------------------------------
+
+function WorkspacePane({ children }: { children: ReactNode }) {
+  const { workspace, view, setView } = useWorkspace();
+  const meta = workspaceMeta[workspace];
+  const tabs = workspaceTabs[workspace];
+  return (
+    <section className="px-4 md:px-8 py-6 md:py-8">
+      <SectionHeader title={meta.title} subtitle={meta.subtitle} />
+      {tabs && <SecondaryTabs items={tabs} value={view} onChange={setView} />}
+      {children}
+    </section>
+  );
+}
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -1178,6 +1217,8 @@ export default function Home() {
   const [focusArticleId, setFocusArticleId] = useState<number | null>(null);
   const { filters } = useFilters();
   const { request, clear: clearFocus } = useFocus();
+  const { workspace, view } = useWorkspace();
+  const { isSnoozed } = useSnooze();
   const flashRef = useRef<number | null>(null);
 
   useEffect(() => setMounted(true), []);
@@ -1203,21 +1244,24 @@ export default function Home() {
     if (!request) return;
     if (request.articleId) {
       const id = request.articleId;
-      const el = typeof document !== 'undefined' ? document.querySelector(`[data-article-id="${id}"]`) : null;
-      if (el && 'scrollIntoView' in el) {
-        (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      setFocusArticleId(id);
-      if (flashRef.current) window.clearTimeout(flashRef.current);
-      flashRef.current = window.setTimeout(() => {
-        openArticle(id);
-        setFocusArticleId(null);
-      }, 700);
-    } else if (request.narrativeId) {
+      const timer = window.setTimeout(() => {
+        const el = document.querySelector(`[data-article-id="${id}"]`);
+        if (el) (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setFocusArticleId(id);
+        if (flashRef.current) window.clearTimeout(flashRef.current);
+        flashRef.current = window.setTimeout(() => {
+          openArticle(id);
+          setFocusArticleId(null);
+        }, 700);
+      }, 80);
+      clearFocus();
+      return () => window.clearTimeout(timer);
+    }
+    if (request.narrativeId) {
       openNarrative(request.narrativeId);
     }
     clearFocus();
-  }, [request, openArticle, openNarrative, clearFocus]);
+  }, [request, openArticle, openNarrative, clearFocus, workspace, view]);
 
   const filteredArticles = useMemo(() => articles.filter((a) => {
     if (filters.ministry !== 'All Ministries' && !a.ministryTags.some((t) => t.name === filters.ministry)) return false;
@@ -1271,20 +1315,47 @@ export default function Home() {
   const article = articles.find((a) => a.id === articleId) ?? null;
   const narrative = narratives.find((n) => n.id === narrativeId) ?? null;
   const cluster = storyClusters.find((c) => c.id === clusterId) ?? null;
+  const highAlertCount = filteredAlerts.filter((a) => a.severity === 'HIGH' && !isSnoozed(`alert-${a.id}`)).length;
+  const misinfoCount = filteredMisinfo.filter((m) => !isSnoozed(`misinfo-${m.id}`)).length;
 
   if (!mounted) return <div className="min-h-screen bg-bg-primary" />;
 
+  let body: ReactNode = null;
+  if (workspace === 'desk') {
+    body = (
+      <CommandCenter
+        filteredNarratives={filteredNarratives}
+        highAlertCount={highAlertCount}
+        misinfoCount={misinfoCount}
+      />
+    );
+  } else if (workspace === 'watch') {
+    body = view === 'misinfo'
+      ? <MisinfoWatchSection filtered={filteredMisinfo} />
+      : <EarlyWarningSection filteredAlerts={filteredAlerts} />;
+  } else if (workspace === 'coverage') {
+    if (view === 'platform') body = <CrossPlatformSection />;
+    else {
+      body = (
+        <MediaFeed
+          filteredArticles={filteredArticles}
+          filteredClusters={filteredClusters}
+          focusArticleId={focusArticleId}
+          pane={view === 'feed' ? 'feed' : 'stories'}
+        />
+      );
+    }
+  } else if (workspace === 'intelligence') {
+    if (view === 'regions') body = <RegionalIntelligence filteredRegions={filteredRegions} />;
+    else if (view === 'penetration') body = <MessagePenetrationSection filtered={filteredPenetration} />;
+    else body = <NarrativeIntelligence filteredPercolation={filteredPercolation} />;
+  } else {
+    body = <MinistryBriefingSection />;
+  }
+
   return (
     <DetailCtx.Provider value={{ openArticle, openNarrative, openCluster }}>
-      <CommandCenter filteredNarratives={filteredNarratives} />
-      <MediaFeed filteredArticles={filteredArticles} filteredClusters={filteredClusters} focusArticleId={focusArticleId} />
-      <NarrativeIntelligence filteredPercolation={filteredPercolation} filteredClusters={filteredClusters} />
-      <RegionalIntelligence filteredRegions={filteredRegions} />
-      <EarlyWarningSection filteredAlerts={filteredAlerts} />
-      <CrossPlatformSection />
-      <MessagePenetrationSection filtered={filteredPenetration} />
-      <MisinfoWatchSection filtered={filteredMisinfo} />
-      <MinistryBriefingSection />
+      {workspace === 'desk' ? body : <WorkspacePane>{body}</WorkspacePane>}
 
       <footer className="p-6 border-t border-border-subtle text-center">
         <div className="tricolor-bar mb-4 rounded-full max-w-xs mx-auto" />

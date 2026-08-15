@@ -1,33 +1,32 @@
 'use client';
 
-import { Menu } from 'lucide-react';
-import { useFilters, useSidebar } from './Providers';
+import { MessageCircle } from 'lucide-react';
+import { useAskSentinel, useFilters, useWorkspace } from './Providers';
 import FilterSelect from './FilterSelect';
 import FilterFab from './FilterFab';
 import ViewControls from './ViewControls';
+import PibLogo from './PibLogo';
 import { MINISTRIES, REGIONS, MEDIA } from '@/data/filterOptions';
+import { viewLabel, workspaceMeta } from '@/data/workspaces';
 
 export default function Header() {
   const { filters, setMinistry, setRegion, setMedia, clear, activeCount } = useFilters();
-  const { setMobileOpen } = useSidebar();
+  const { openPanel } = useAskSentinel();
+  const { workspace, view } = useWorkspace();
+  const crumb = viewLabel(workspace, view);
 
   return (
-    <header className="sticky top-0 z-40 bg-bg-primary border-b border-border-subtle px-4 md:px-6 py-3">
+    <header className="app-chrome sticky top-0 z-40 bg-bg-primary border-b border-border-subtle px-4 md:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="md:hidden text-text-secondary hover:text-text-primary p-1"
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <PibLogo className="w-8 h-8 shrink-0 md:hidden" />
           <div className="min-w-0">
             <h1 className="text-sm md:text-base font-semibold text-text-primary truncate">
               PIB Sentinel
             </h1>
             <p className="text-[10px] md:text-xs text-text-muted truncate">
-              Press Information Bureau • Government of India
+              Sentinel / {workspaceMeta[workspace].title}
+              {crumb ? ` / ${crumb}` : ''}
             </p>
           </div>
         </div>
@@ -47,6 +46,14 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => openPanel()}
+            className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md border border-border-subtle bg-bg-card text-text-secondary hover:text-text-primary hover:border-border-strong"
+            aria-label="Ask Sentinel"
+          >
+            <MessageCircle className="w-4 h-4" />
+          </button>
           <FilterFab />
           <ViewControls />
         </div>
