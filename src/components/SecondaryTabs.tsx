@@ -15,7 +15,7 @@ export default function SecondaryTabs({
   const listRef = useRef<HTMLDivElement>(null);
 
   function focusTab(index: number) {
-    const buttons = listRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    const buttons = listRef.current?.querySelectorAll<HTMLButtonElement>('.ws-tab');
     const next = buttons?.[index];
     next?.focus();
     const id = items[index]?.id;
@@ -44,7 +44,7 @@ export default function SecondaryTabs({
     <div className="workspace-tabs mb-6 -mx-4 md:-mx-8 px-4 md:px-8">
       <div
         ref={listRef}
-        className="flex overflow-x-auto no-scrollbar"
+        className="workspace-tabs-list"
         role="tablist"
         aria-orientation="horizontal"
         onKeyDown={onKeyDown}
@@ -57,6 +57,7 @@ export default function SecondaryTabs({
               id={`ws-tab-${item.id}`}
               type="button"
               role="tab"
+              className={active ? 'ws-tab is-active' : 'ws-tab'}
               aria-selected={active}
               tabIndex={active ? 0 : -1}
               onClick={() => onChange(item.id)}

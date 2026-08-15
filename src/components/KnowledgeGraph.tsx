@@ -1,6 +1,7 @@
 'use client';
 
 import { memo, useEffect, useMemo, useState } from 'react';
+import { X } from 'lucide-react';
 import {
   Background,
   Controls,
@@ -123,8 +124,27 @@ function GraphCanvas() {
     else if (n.clusterId) requestFocus({ clusterId: n.clusterId, stay: true });
   }
 
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelected(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [selected]);
+
+  const inspector = (
+    <InspectorBody
+      selected={selected}
+      neighbors={neighbors}
+      onSelect={setSelected}
+      onOpen={openEntity}
+    />
+  );
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-3">
+      <div className="relative">
       <div className="glass-card overflow-hidden">
         <div className="px-3 py-2.5 border-b border-border-subtle flex flex-col sm:flex-row sm:items-center gap-2">
           <input
@@ -182,52 +202,102 @@ function GraphCanvas() {
           </ReactFlow>
         </div>
         <p className="px-3 py-2 text-[10px] text-text-muted border-t border-border-subtle">
-          Drag nodes · scroll to zoom · {graph.nodes.length} entities · {graph.links.length} links from live mock seed
+          Drag nodes · scroll to zoom · tap a node for details · {graph.nodes.length} entities · {graph.links.length} links
         </p>
       </div>
 
-      <aside className="glass-card p-4 min-h-[220px]">
-        {!selected ? (
-          <p className="text-sm text-text-muted leading-relaxed">
-            Click a node to inspect ministries, regions, outlets, articles, narratives, clusters, and claims. Drag freely — layout is a starting map, not a lock.
-          </p>
-        ) : (
-          <div>
-            <span
-              className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{ background: `${GRAPH_KIND_COLOR[selected.kind]}22`, color: GRAPH_KIND_COLOR[selected.kind] }}
-            >
-              {selected.kind}
-            </span>
-            <h3 className="text-sm font-semibold text-text-primary mt-2 leading-snug">{selected.label}</h3>
-            {selected.subtitle && <p className="text-[11px] text-text-muted mt-1">{selected.subtitle}</p>}
-            {(selected.articleId || selected.narrativeId || selected.clusterId) && (
-              <button
-                type="button"
-                onClick={() => openEntity(selected)}
-                className="mt-3 text-xs px-3 py-1.5 rounded-lg border border-border-strong text-text-primary hover:bg-bg-card-hover"
-              >
-                Open record
-              </button>
-            )}
-            <h4 className="text-[10px] uppercase tracking-wider text-text-muted mt-4 mb-2">Connected</h4>
-            <div className="space-y-1.5 max-h-64 overflow-y-auto no-scrollbar">
-              {neighbors.length === 0 && <p className="text-xs text-text-muted">No neighbours in this slice.</p>}
-              {neighbors.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => setSelected(n)}
-                  className="w-full text-left text-xs px-2 py-1.5 rounded-md border border-border-subtle hover:border-border-strong"
-                >
-                  <span className="text-[9px] uppercase tracking-wider" style={{ color: GRAPH_KIND_COLOR[n.kind] }}>{n.kind}</span>
-                  <span className="block text-text-primary leading-snug">{n.label}</span>
-                </button>
-              ))}
+      {selected && (
+        <div className="xl:hidden absolute inset-0 z-20 flex flex-col justify-end pointer-events-none">
+          <button
+            type="button"
+            className="flex-1 bg-black/40 pointer-events-auto"
+            aria-label="Dismiss node details"
+            onClick={() => setSelected(null)}
+          />
+          <aside
+            className="relative pointer-events-auto mx-2 mb-2 max-h-[46%] overflow-y-auto glass-card p-4 pt-3 animate-slide-in"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Node details"
+          >
+            <div className="flex justify-center mb-3" aria-hidden>
+              <div className="w-8 h-1 rounded-full bg-border-strong" />
             </div>
-          </div>
-        )}
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="absolute top-2.5 right-2.5 p-1.5 rounded-lg border border-border-subtle text-text-muted hover:text-text-primary hover:border-border-strong bg-bg-card"
+              aria-label="Close node details"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+            {inspector}
+          </aside>
+        </div>
+      )}
+      </div>
+
+      <aside className="hidden xl:block glass-card p-4 min-h-[220px]">
+        {inspector}
       </aside>
+    </div>
+  );
+}
+
+function InspectorBody({
+  selected,
+  neighbors,
+  onSelect,
+  onOpen,
+}: {
+  selected: GraphEntity | null;
+  neighbors: GraphEntity[];
+  onSelect: (n: GraphEntity) => void;
+  onOpen: (n: GraphEntity) => void;
+}) {
+  if (!selected) {
+    return (
+      <p className="text-sm text-text-muted leading-relaxed">
+        Click a node to inspect ministries, regions, outlets, articles, narratives, clusters, and claims. Drag freely — layout is a starting map, not a lock.
+      </p>
+    );
+  }
+  return (
+    <div>
+      <span
+        className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+        style={{ background: `${GRAPH_KIND_COLOR[selected.kind]}22`, color: GRAPH_KIND_COLOR[selected.kind] }}
+      >
+        {selected.kind}
+      </span>
+      <h3 className="text-sm font-semibold text-text-primary mt-2 leading-snug pr-8">
+        {selected.label}
+      </h3>
+      {selected.subtitle && <p className="text-[11px] text-text-muted mt-1">{selected.subtitle}</p>}
+      {(selected.articleId || selected.narrativeId || selected.clusterId) && (
+        <button
+          type="button"
+          onClick={() => onOpen(selected)}
+          className="mt-3 text-xs px-3 py-1.5 rounded-lg border border-border-strong text-text-primary hover:bg-bg-card-hover"
+        >
+          Open record
+        </button>
+      )}
+      <h4 className="text-[10px] uppercase tracking-wider text-text-muted mt-4 mb-2">Connected</h4>
+      <div className="space-y-1.5 max-h-40 xl:max-h-64 overflow-y-auto no-scrollbar">
+        {neighbors.length === 0 && <p className="text-xs text-text-muted">No neighbours in this slice.</p>}
+        {neighbors.map((n) => (
+          <button
+            key={n.id}
+            type="button"
+            onClick={() => onSelect(n)}
+            className="w-full text-left text-xs px-2 py-1.5 rounded-md border border-border-subtle hover:border-border-strong"
+          >
+            <span className="text-[9px] uppercase tracking-wider" style={{ color: GRAPH_KIND_COLOR[n.kind] }}>{n.kind}</span>
+            <span className="block text-text-primary leading-snug">{n.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
