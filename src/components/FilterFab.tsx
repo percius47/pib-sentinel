@@ -29,7 +29,7 @@ export default function FilterFab() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="lg:hidden relative inline-flex items-center justify-center h-9 w-9 rounded-md border border-border-subtle bg-bg-card text-text-secondary hover:text-text-primary hover:border-border-strong"
+        className="md:hidden relative inline-flex items-center justify-center h-9 w-9 rounded-md border border-border-subtle bg-bg-card text-text-secondary hover:text-text-primary hover:border-border-strong"
         aria-label="Open filters"
       >
         <SlidersHorizontal className="w-4 h-4" />
@@ -42,7 +42,7 @@ export default function FilterFab() {
 
       {open && (
         <div
-          className="lg:hidden modal-overlay animate-fade-in"
+          className="md:hidden modal-overlay animate-fade-in"
           onClick={() => setOpen(false)}
           role="dialog"
           aria-modal="true"

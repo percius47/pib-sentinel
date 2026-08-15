@@ -10,6 +10,8 @@ export const WORKSPACE_VIEWS = [
   'narratives',
   'regions',
   'penetration',
+  'graph',
+  'deepfake',
 ] as const;
 export type WorkspaceView = (typeof WORKSPACE_VIEWS)[number];
 
@@ -33,7 +35,7 @@ export const workspaceMeta: Record<WorkspaceId, { title: string; subtitle: strin
   desk: { title: 'Duty Desk', subtitle: 'Overview for this shift' },
   watch: { title: 'Watch', subtitle: 'Handle or snooze' },
   coverage: { title: 'Coverage', subtitle: 'What outlets are saying' },
-  intelligence: { title: 'Intelligence', subtitle: 'Spread, regions, and message pickup' },
+  intelligence: { title: 'Intelligence', subtitle: 'Spread, graph, and authenticity' },
   brief: { title: 'Ministry Briefing', subtitle: 'Daily brief for ministry officers' },
 };
 
@@ -51,6 +53,8 @@ export const workspaceTabs: Partial<Record<WorkspaceId, { id: WorkspaceView; lab
     { id: 'narratives', label: 'Narratives' },
     { id: 'regions', label: 'Regions' },
     { id: 'penetration', label: 'Penetration' },
+    { id: 'graph', label: 'Graph' },
+    { id: 'deepfake', label: 'Deepfake' },
   ],
 };
 

@@ -22,6 +22,8 @@ import {
 import { useDensity, useFilters, useFocus, useSnooze, useTheme, useWorkspace } from '@/components/Providers';
 import SecondaryTabs from '@/components/SecondaryTabs';
 import { workspaceMeta, workspaceTabs } from '@/data/workspaces';
+import KnowledgeGraph from '@/components/KnowledgeGraph';
+import DeepfakeWatch from '@/components/DeepfakeWatch';
 import ArticleModal from '@/components/ArticleModal';
 import NarrativeModal from '@/components/NarrativeModal';
 import StanceCompareModal from '@/components/StanceCompareModal';
@@ -58,7 +60,7 @@ function useChartTheme() {
 
 function SectionHeader({ title, subtitle, badge }: { title: string; subtitle?: string; badge?: string }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-4">
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
       <div>
         <h2 className="section-title flex items-center gap-3 flex-wrap">
           {title}
@@ -1242,8 +1244,23 @@ export default function Home() {
   // Focus request from Ask Sentinel citations, PriorityPin, etc.
   useEffect(() => {
     if (!request) return;
+    if (request.clusterId) {
+      openCluster(request.clusterId);
+      clearFocus();
+      return;
+    }
+    if (request.narrativeId) {
+      openNarrative(request.narrativeId);
+      clearFocus();
+      return;
+    }
     if (request.articleId) {
       const id = request.articleId;
+      if (request.stay) {
+        openArticle(id);
+        clearFocus();
+        return;
+      }
       const timer = window.setTimeout(() => {
         const el = document.querySelector(`[data-article-id="${id}"]`);
         if (el) (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1257,11 +1274,8 @@ export default function Home() {
       clearFocus();
       return () => window.clearTimeout(timer);
     }
-    if (request.narrativeId) {
-      openNarrative(request.narrativeId);
-    }
     clearFocus();
-  }, [request, openArticle, openNarrative, clearFocus, workspace, view]);
+  }, [request, openArticle, openNarrative, openCluster, clearFocus, workspace, view]);
 
   const filteredArticles = useMemo(() => articles.filter((a) => {
     if (filters.ministry !== 'All Ministries' && !a.ministryTags.some((t) => t.name === filters.ministry)) return false;
@@ -1348,6 +1362,8 @@ export default function Home() {
   } else if (workspace === 'intelligence') {
     if (view === 'regions') body = <RegionalIntelligence filteredRegions={filteredRegions} />;
     else if (view === 'penetration') body = <MessagePenetrationSection filtered={filteredPenetration} />;
+    else if (view === 'graph') body = <KnowledgeGraph />;
+    else if (view === 'deepfake') body = <DeepfakeWatch />;
     else body = <NarrativeIntelligence filteredPercolation={filteredPercolation} />;
   } else {
     body = <MinistryBriefingSection />;

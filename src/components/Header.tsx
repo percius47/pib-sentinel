@@ -1,7 +1,7 @@
 'use client';
 
 import { MessageCircle } from 'lucide-react';
-import { useAskSentinel, useFilters, useWorkspace } from './Providers';
+import { useAskSentinel, useFilters, useSidebar, useWorkspace } from './Providers';
 import FilterSelect from './FilterSelect';
 import FilterFab from './FilterFab';
 import ViewControls from './ViewControls';
@@ -9,40 +9,64 @@ import PibLogo from './PibLogo';
 import { MINISTRIES, REGIONS, MEDIA } from '@/data/filterOptions';
 import { viewLabel, workspaceMeta } from '@/data/workspaces';
 
-export default function Header() {
-  const { filters, setMinistry, setRegion, setMedia, clear, activeCount } = useFilters();
-  const { openPanel } = useAskSentinel();
+function BrandBlock({ compact }: { compact?: boolean }) {
   const { workspace, view } = useWorkspace();
   const crumb = viewLabel(workspace, view);
+  return (
+    <div className="min-w-0">
+      <h1 className={`font-semibold text-text-primary truncate ${compact ? 'text-sm' : 'text-sm md:text-base'}`}>
+        PIB Sentinel
+      </h1>
+      <p className="text-[10px] md:text-xs text-text-muted truncate">
+        Sentinel / {workspaceMeta[workspace].title}
+        {crumb ? ` / ${crumb}` : ''}
+      </p>
+    </div>
+  );
+}
+
+function FilterRow() {
+  const { filters, setMinistry, setRegion, setMedia, clear, activeCount } = useFilters();
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <FilterSelect value={filters.ministry} onChange={setMinistry} options={MINISTRIES} label="Ministry" />
+      <FilterSelect value={filters.region} onChange={setRegion} options={REGIONS} label="Region" />
+      <FilterSelect value={filters.media} onChange={setMedia} options={MEDIA} label="Media" />
+      {activeCount > 0 && (
+        <button
+          onClick={clear}
+          className="text-[11px] text-text-muted hover:text-text-primary px-2 py-1 shrink-0"
+        >
+          Clear
+        </button>
+      )}
+    </div>
+  );
+}
+
+export default function Header() {
+  const { filters, activeCount } = useFilters();
+  const { openPanel } = useAskSentinel();
+  const { collapsed } = useSidebar();
 
   return (
     <header className="app-chrome sticky top-0 z-40 bg-bg-primary border-b border-border-subtle px-4 md:px-6 py-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <PibLogo className="w-8 h-8 shrink-0 md:hidden" />
-          <div className="min-w-0">
-            <h1 className="text-sm md:text-base font-semibold text-text-primary truncate">
-              PIB Sentinel
-            </h1>
-            <p className="text-[10px] md:text-xs text-text-muted truncate">
-              Sentinel / {workspaceMeta[workspace].title}
-              {crumb ? ` / ${crumb}` : ''}
-            </p>
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 min-w-0 md:hidden">
+            <PibLogo className="w-8 h-8 shrink-0" />
+            <BrandBlock compact />
           </div>
-        </div>
 
-        <div className="hidden lg:flex items-center gap-2">
-          <FilterSelect value={filters.ministry} onChange={setMinistry} options={MINISTRIES} label="Ministry" />
-          <FilterSelect value={filters.region} onChange={setRegion} options={REGIONS} label="Region" />
-          <FilterSelect value={filters.media} onChange={setMedia} options={MEDIA} label="Media" />
-          {activeCount > 0 && (
-            <button
-              onClick={clear}
-              className="text-[11px] text-text-muted hover:text-text-primary px-2 py-1"
-            >
-              Clear
-            </button>
+          {collapsed && (
+            <div className="hidden md:block min-w-0 shrink-0">
+              <BrandBlock />
+            </div>
           )}
+
+          <div className="hidden md:flex min-w-0">
+            <FilterRow />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -60,7 +84,7 @@ export default function Header() {
       </div>
 
       {activeCount > 0 && (
-        <div className="flex items-center gap-2 mt-2.5 flex-wrap lg:hidden">
+        <div className="flex items-center gap-2 mt-2.5 flex-wrap md:hidden">
           {filters.ministry !== 'All Ministries' && (
             <span className="text-[11px] px-2 py-0.5 rounded-full border border-border-strong text-text-secondary">
               {filters.ministry.replace('Ministry of ', '')}

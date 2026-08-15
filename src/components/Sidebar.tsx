@@ -59,10 +59,20 @@ export default function Sidebar() {
         transition-all duration-200 ${width}
       `}
     >
-      <div className={`p-4 border-b border-border-subtle ${collapsed ? 'md:px-3' : ''}`}>
-        <div className={`flex items-center gap-3 overflow-hidden ${collapsed ? 'justify-center' : ''}`}>
-          <PibLogo className="w-9 h-9 shrink-0" />
-          {!collapsed && (
+      <div className={`border-b border-border-subtle ${collapsed ? 'md:px-3 p-3' : 'p-4'}`}>
+        {collapsed ? (
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="w-full flex items-center justify-center rounded-lg hover:bg-bg-card-hover p-0.5"
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+          >
+            <PibLogo className="w-9 h-9 shrink-0" />
+          </button>
+        ) : (
+          <div className="flex items-center gap-3 overflow-hidden">
+            <PibLogo className="w-9 h-9 shrink-0" />
             <div className="overflow-hidden">
               <h1 className="text-sm font-bold tracking-wider text-text-primary whitespace-nowrap">
                 PIB SENTINEL
@@ -71,8 +81,8 @@ export default function Sidebar() {
                 Media Intelligence
               </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <nav className="flex-1 py-2 overflow-y-auto no-scrollbar">

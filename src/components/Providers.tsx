@@ -145,6 +145,8 @@ function todayKey() {
 interface FocusRequest {
   articleId?: number;
   narrativeId?: number;
+  clusterId?: number;
+  stay?: boolean;
 }
 
 interface FocusContextValue {
@@ -304,14 +306,16 @@ export default function Providers({ children }: { children: ReactNode }) {
   }, [workspace]);
 
   const requestFocus = useCallback((r: FocusRequest) => {
-    if (r.articleId) {
-      setWorkspaceState('coverage');
-      setViewState('feed');
-      writeWorkspaceUrl('coverage', 'feed');
-    } else if (r.narrativeId) {
-      setWorkspaceState('intelligence');
-      setViewState('narratives');
-      writeWorkspaceUrl('intelligence', 'narratives');
+    if (!r.stay) {
+      if (r.articleId) {
+        setWorkspaceState('coverage');
+        setViewState('feed');
+        writeWorkspaceUrl('coverage', 'feed');
+      } else if (r.narrativeId) {
+        setWorkspaceState('intelligence');
+        setViewState('narratives');
+        writeWorkspaceUrl('intelligence', 'narratives');
+      }
     }
     setFocusRequest(r);
   }, []);

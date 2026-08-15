@@ -12,7 +12,7 @@ export default function FilterSelect({ value, onChange, options, label }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`appearance-none text-xs bg-bg-card border rounded-lg pl-3 pr-8 py-2 text-text-secondary focus:outline-none cursor-pointer transition-colors w-full lg:w-auto
+        className={`appearance-none text-xs bg-bg-card border rounded-lg pl-3 pr-8 py-2 text-text-secondary focus:outline-none cursor-pointer transition-colors w-full md:w-auto
           ${active ? 'border-border-strong text-text-primary' : 'border-border-subtle hover:border-border-strong'}
         `}
       >
