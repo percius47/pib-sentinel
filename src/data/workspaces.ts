@@ -24,7 +24,7 @@ export const DEFAULT_VIEW: Record<WorkspaceId, WorkspaceView | null> = {
 };
 
 export const workspaces = [
-  { id: 'desk' as const, label: 'Desk', icon: 'LayoutDashboard' },
+  { id: 'desk' as const, label: 'Dashboard', icon: 'LayoutDashboard' },
   { id: 'watch' as const, label: 'Watch', icon: 'AlertTriangle' },
   { id: 'coverage' as const, label: 'Coverage', icon: 'Newspaper' },
   { id: 'intelligence' as const, label: 'Intel', icon: 'GitBranch' },
@@ -32,7 +32,7 @@ export const workspaces = [
 ];
 
 export const workspaceMeta: Record<WorkspaceId, { title: string; subtitle: string }> = {
-  desk: { title: 'Duty Desk', subtitle: 'Overview for this shift' },
+  desk: { title: 'Dashboard', subtitle: '' },
   watch: { title: 'Watch', subtitle: 'Handle or snooze' },
   coverage: { title: 'Coverage', subtitle: 'What outlets are saying' },
   intelligence: { title: 'Intelligence', subtitle: 'Spread, graph, and authenticity' },

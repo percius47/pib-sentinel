@@ -60,19 +60,16 @@ function useChartTheme() {
 
 function SectionHeader({ title, subtitle, badge }: { title: string; subtitle?: string; badge?: string }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
-      <div>
-        <h2 className="section-title flex items-center gap-3 flex-wrap">
-          {title}
-          {badge && (
-            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-accent-red/15 text-accent-red border border-accent-red/20">
-              {badge}
-            </span>
-          )}
-        </h2>
-        {subtitle && <p className="text-sm text-text-muted mt-1">{subtitle}</p>}
-      </div>
-      <p className="text-xs text-text-muted shrink-0">Aug 13, 2026 • 14:30 IST</p>
+    <div className="mb-3">
+      <h2 className="section-title flex items-center gap-3 flex-wrap">
+        {title}
+        {badge && (
+          <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-accent-red/15 text-accent-red border border-accent-red/20">
+            {badge}
+          </span>
+        )}
+      </h2>
+      {subtitle && <p className="text-sm text-text-muted mt-1">{subtitle}</p>}
     </div>
   );
 }
@@ -277,7 +274,7 @@ function CommandCenter({
   const preview = filteredNarratives.slice(0, 3);
   return (
     <section id="desk" className="px-4 md:px-8 py-6 md:py-8">
-      <SectionHeader title="Duty Desk" subtitle="Overview for this shift" />
+      <SectionHeader title="Dashboard" />
       <ExecutiveDigest section="command-center" />
       <ThreatLevelBanner />
 

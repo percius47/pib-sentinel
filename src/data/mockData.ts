@@ -1137,7 +1137,7 @@ export const narrativeDetails: Record<number, {
 };
 
 export const sidebarItems = [
-  { id: 'desk', label: 'Desk', icon: 'LayoutDashboard' },
+  { id: 'desk', label: 'Dashboard', icon: 'LayoutDashboard' },
   { id: 'watch', label: 'Watch', icon: 'AlertTriangle' },
   { id: 'coverage', label: 'Coverage', icon: 'Newspaper' },
   { id: 'intelligence', label: 'Intel', icon: 'GitBranch' },
