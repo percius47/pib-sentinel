@@ -286,31 +286,31 @@ kbd {
 
 .workspace-tabs-list {
   display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
+  width: 100%;
+  overflow: hidden;
   gap: 2px;
   padding: 0;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-}
-.workspace-tabs-list::-webkit-scrollbar {
-  height: 0;
+  container-type: inline-size;
+  container-name: wstabs;
 }
 .ws-tab {
   position: relative;
-  flex: 1 0 auto;
-  min-width: max-content;
-  padding: 0.72rem 1.15rem 0.82rem;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.7rem clamp(0.12rem, 1.4cqi, 1.1rem) 0.78rem;
   border: 0;
   border-radius: 6px;
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.72rem;
+  font-size: clamp(0.5rem, 2.85cqi, 0.72rem);
   font-weight: 650;
-  letter-spacing: 0.08em;
+  letter-spacing: clamp(0em, 0.35cqi, 0.08em);
   line-height: 1;
+  text-align: center;
   text-transform: uppercase;
   white-space: nowrap;
   box-shadow: inset 0 -3px 0 transparent;
